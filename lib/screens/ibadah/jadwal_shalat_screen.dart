@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../services/prayer_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/preferences_service.dart';
+import '../../services/widget_service.dart';
 
 class JadwalShalatScreen extends StatefulWidget {
   const JadwalShalatScreen({super.key});
@@ -56,6 +57,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
         _schedule = s;
         _nextPrayer = PrayerService.getNextPrayer(s);
       });
+      WidgetService.updateWidget(schedule: s, nextPrayer: _nextPrayer);
     }
   }
 
@@ -294,6 +296,8 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                 await NotificationService().showTestNotification(
                   useAdzanSound: prefs.useAdzanSound,
                 );
+              } else if (val == 'show_widget_guide') {
+                _showWidgetGuideDialog();
               }
             },
             itemBuilder: (context) => [
@@ -355,6 +359,21 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                     ),
                     SizedBox(width: 10),
                     Text('Uji Coba Bunyi Notifikasi'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'show_widget_guide',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.widgets_outlined,
+                      color: Color(0xFF0F3A26),
+                      size: 20,
+                    ),
+                    SizedBox(width: 10),
+                    Text('Widget Home Screen HP'),
                   ],
                 ),
               ),
@@ -813,6 +832,145 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showWidgetGuideDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F3A26).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.widgets_rounded,
+                      color: Color(0xFF0F3A26),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Widget Jadwal Shalat di Home Screen',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F3A26),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Pasang jadwal shalat langsung di layar depan HP Anda tanpa perlu membuka aplikasi:',
+                style: TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+              const SizedBox(height: 12),
+              _buildStepItem('1', 'Kembali ke Layar Utama (Home Screen) HP Anda.'),
+              _buildStepItem('2', 'Tekan & tahan (long-press) pada bagian kosong layar.'),
+              _buildStepItem('3', 'Pilih menu "Widgets" atau "Widget".'),
+              _buildStepItem('4', 'Cari "Zelixa Islamic" lalu pilih "Jadwal Shalat Zelixa".'),
+              _buildStepItem('5', 'Tarik widget dan posisikan di layar depan Anda.'),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.sync_rounded),
+                  label: const Text('Perbarui / Sinkronkan Data Widget'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F3A26),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    if (_schedule != null) {
+                      await WidgetService.updateWidget(
+                        schedule: _schedule,
+                        nextPrayer: _nextPrayer,
+                      );
+                    }
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: Color(0xFF0F3A26),
+                          content: Text('Data widget jadwal shalat berhasil disinkronkan!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStepItem(String no, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE2B75A),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              no,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F3A26),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF334155)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

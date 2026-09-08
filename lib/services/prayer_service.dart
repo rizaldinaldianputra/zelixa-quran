@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'notification_service.dart';
 import 'preferences_service.dart';
+import 'widget_service.dart';
 
 class CityLocation {
   final String name;
@@ -206,9 +207,11 @@ class PrayerService {
     final prefs = PreferencesService();
     await ns.cancelAllNotifications();
     
-    if (!prefs.isNotificationEnabled) return;
-    
     final c = await getSelectedCity();
+    final todaySchedule = calculatePrayers(c, DateTime.now());
+    await WidgetService.updateWidget(schedule: todaySchedule);
+
+    if (!prefs.isNotificationEnabled) return;
     
     for (int i = 0; i < 7; i++) {
       final date = DateTime.now().add(Duration(days: i));
