@@ -1,0 +1,118 @@
+import 'package:flutter/material.dart';
+
+import 'hadits_screen.dart';
+import 'pengaturan_screen.dart';
+import 'tentang_aplikasi_screen.dart';
+
+class LainnyaTabScreen extends StatelessWidget {
+  const LainnyaTabScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final menuItems = [
+      {
+        'title': 'Hadits Pilihan',
+        'subtitle': 'Kumpulan Hadits Arbain Nawawi & makna',
+        'icon': Icons.menu_book_rounded,
+        'screen': const HaditsScreen(),
+      },
+      {
+        'title': 'Pengaturan',
+        'subtitle': 'Ukuran teks Arab, terjemahan, dan latin',
+        'icon': Icons.settings_rounded,
+        'screen': const PengaturanScreen(),
+      },
+      {
+        'title': 'Tentang Aplikasi',
+        'subtitle': 'Versi aplikasi, profil, dan sumber data',
+        'icon': Icons.info_outline_rounded,
+        'screen': const TentangAplikasiScreen(),
+      },
+    ];
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text(
+          'Lainnya',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFF0F3A26),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: menuItems.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final item = menuItems[index];
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => item['screen'] as Widget),
+              );
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      item['icon'] as IconData,
+                      color: const Color(0xFF0F3A26),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['title'] as String,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          item['subtitle'] as String,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
