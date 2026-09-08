@@ -3,19 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../models/quran_models.dart';
 import '../providers/quran_provider.dart';
+import '../models/quran_models.dart';
 import '../services/bookmark_service.dart';
 import '../services/settings_service.dart';
+import '../theme/app_theme.dart';
 
 class SurahDetailScreen extends ConsumerStatefulWidget {
   final int surahNumber;
   final String surahName;
+  final int initialVerseIndex;
 
   const SurahDetailScreen({
     super.key,
     required this.surahNumber,
     required this.surahName,
+    this.initialVerseIndex = 0,
   });
 
   @override
@@ -23,45 +26,62 @@ class SurahDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
-  late AudioPlayer _audioPlayer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   int? _playingVerse;
   bool _isPlaying = false;
+  final Set<int> _bookmarkedVerses = {};
+
   double _fontSize = 24.0;
   bool _showLatin = true;
   bool _showTranslation = true;
-  final Set<int> _bookmarkedVerses = {};
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
+    _loadSettings();
+    _loadBookmarks();
+    _saveLastReadInitial();
+
     _audioPlayer.playerStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state.playing && state.processingState != ProcessingState.completed;
-          if (state.processingState == ProcessingState.completed) {
+      if (state.processingState == ProcessingState.completed) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = false;
             _playingVerse = null;
-          }
-        });
+          });
+        }
       }
     });
-
-    _loadSettingsAndBookmarks();
-    _recordLastRead(1);
   }
 
-  Future<void> _loadSettingsAndBookmarks() async {
+  Future<void> _loadSettings() async {
     final size = await SettingsService.getArabicFontSize();
     final latin = await SettingsService.getShowLatin();
     final trans = await SettingsService.getShowTranslation();
-    final bookmarks = await BookmarkService.getBookmarks();
-
     if (mounted) {
       setState(() {
         _fontSize = size;
         _showLatin = latin;
         _showTranslation = trans;
-        for (var b in bookmarks) {
+      });
+    }
+  }
+
+  Future<void> _saveLastReadInitial() async {
+    await BookmarkService.saveLastRead(
+      surahNumber: widget.surahNumber,
+      verseNumber: widget.initialVerseIndex + 1,
+      surahName: widget.surahName,
+      surahNameLatin: widget.surahName,
+    );
+  }
+
+  Future<void> _loadBookmarks() async {
+    final list = await BookmarkService.getBookmarks();
+    if (mounted) {
+      setState(() {
+        _bookmarkedVerses.clear();
+        for (var b in list) {
           if (b.surahNumber == widget.surahNumber) {
             _bookmarkedVerses.add(b.verseNumber);
           }
@@ -70,82 +90,91 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
     }
   }
 
-  Future<void> _recordLastRead(int verseNumber) async {
-    await BookmarkService.saveLastRead(
-      surahNumber: widget.surahNumber,
-      verseNumber: verseNumber,
-      surahName: widget.surahName,
-      surahNameLatin: widget.surahName,
-    );
-  }
-
   @override
   void dispose() {
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  Future<void> _playAudio(int verseNumber, String audioUrl) async {
-    try {
-      if (_playingVerse == verseNumber && _isPlaying) {
-        await _audioPlayer.pause();
-        setState(() {
-          _isPlaying = false;
-        });
-      } else {
+  Future<void> _playAudio(int verseNumber, String? audioUrl) async {
+    if (audioUrl == null || audioUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Audio tidak tersedia untuk ayat ini.')),
+      );
+      return;
+    }
+
+    if (_playingVerse == verseNumber && _isPlaying) {
+      await _audioPlayer.pause();
+      setState(() => _isPlaying = false);
+    } else {
+      try {
+        await _audioPlayer.setUrl(audioUrl);
+        await _audioPlayer.play();
         setState(() {
           _playingVerse = verseNumber;
           _isPlaying = true;
         });
-        await _audioPlayer.setUrl(audioUrl);
-        await _audioPlayer.play();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memutar audio: $e')),
-        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal memutar audio: $e')),
+          );
+        }
       }
     }
   }
 
   Future<void> _toggleBookmark(Verse verse, String arabicText) async {
-    final bookmark = BookmarkModel(
-      surahNumber: widget.surahNumber,
-      verseNumber: verse.verseNumber,
-      surahNameLatin: widget.surahName,
-      arabicText: arabicText,
-      translation: verse.translationId,
-      createdAt: DateTime.now(),
-    );
-
-    final result = await BookmarkService.toggleBookmark(bookmark);
-    setState(() {
-      if (result) {
-        _bookmarkedVerses.add(verse.verseNumber);
-      } else {
+    final isBookmarked = _bookmarkedVerses.contains(verse.verseNumber);
+    if (isBookmarked) {
+      await BookmarkService.removeBookmark(
+        widget.surahNumber,
+        verse.verseNumber,
+      );
+      setState(() {
         _bookmarkedVerses.remove(verse.verseNumber);
-      }
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result
-                ? 'Ayat ${verse.verseNumber} berhasil disimpan ke Bookmark'
-                : 'Bookmark ayat ${verse.verseNumber} dihapus',
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Penanda ayat dihapus'),
+            duration: Duration(seconds: 1),
           ),
-          duration: const Duration(seconds: 1),
+        );
+      }
+    } else {
+      await BookmarkService.toggleBookmark(
+        BookmarkModel(
+          surahNumber: widget.surahNumber,
+          verseNumber: verse.verseNumber,
+          surahNameLatin: widget.surahName,
+          arabicText: arabicText,
+          translation: verse.translationId,
+          createdAt: DateTime.now(),
         ),
       );
+      setState(() {
+        _bookmarkedVerses.add(verse.verseNumber);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ayat ditambahkan ke bookmark'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
     }
   }
 
   void _copyVerse(Verse verse, String arabicText) {
-    final text =
-        '$arabicText\n\n"${verse.latin}"\n\nArtinya: ${verse.translationId}\n(QS. ${widget.surahName}: ${verse.verseNumber})';
-    Clipboard.setData(ClipboardData(text: text));
+    Clipboard.setData(
+      ClipboardData(
+        text:
+            'QS. ${widget.surahName}: ${verse.verseNumber}\n\n$arabicText\n\n"${verse.translationId}"',
+      ),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Ayat disalin ke papan klip'),
@@ -156,15 +185,17 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
     final versesAsync = ref.watch(surahVersesProvider(widget.surahNumber));
 
     return Scaffold(
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: Text(
           widget.surahName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -173,56 +204,61 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             onPressed: () {
               showModalBottomSheet(
                 context: context,
+                backgroundColor: context.cardColor,
                 builder: (context) {
                   return StatefulBuilder(
                     builder: (context, setModalState) {
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Ukuran Teks Arab',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                      return Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ukuran Teks Arab',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.textPrimary,
+                                ),
                               ),
-                            ),
-                            Slider(
-                              value: _fontSize,
-                              min: 18.0,
-                              max: 36.0,
-                              divisions: 9,
-                              label: '${_fontSize.toInt()}',
-                              activeColor: const Color(0xFF0F3A26),
-                              onChanged: (val) {
-                                setModalState(() => _fontSize = val);
-                                setState(() => _fontSize = val);
-                                SettingsService.setArabicFontSize(val);
-                              },
-                            ),
-                            SwitchListTile(
-                              title: const Text('Tampilkan Latin'),
-                              value: _showLatin,
-                              activeThumbColor: const Color(0xFF0F3A26),
-                              onChanged: (val) {
-                                setModalState(() => _showLatin = val);
-                                setState(() => _showLatin = val);
-                                SettingsService.setShowLatin(val);
-                              },
-                            ),
-                            SwitchListTile(
-                              title: const Text('Tampilkan Terjemahan'),
-                              value: _showTranslation,
-                              activeThumbColor: const Color(0xFF0F3A26),
-                              onChanged: (val) {
-                                setModalState(() => _showTranslation = val);
-                                setState(() => _showTranslation = val);
-                                SettingsService.setShowTranslation(val);
-                              },
-                            ),
-                          ],
+                              Slider(
+                                value: _fontSize,
+                                min: 18.0,
+                                max: 36.0,
+                                divisions: 9,
+                                label: '${_fontSize.toInt()}',
+                                activeColor: context.primaryAdaptive,
+                                onChanged: (val) {
+                                  setModalState(() => _fontSize = val);
+                                  setState(() => _fontSize = val);
+                                  SettingsService.setArabicFontSize(val);
+                                },
+                              ),
+                              SwitchListTile(
+                                title: Text('Tampilkan Latin', style: TextStyle(color: context.textPrimary)),
+                                value: _showLatin,
+                                activeThumbColor: context.primaryAdaptive,
+                                onChanged: (val) {
+                                  setModalState(() => _showLatin = val);
+                                  setState(() => _showLatin = val);
+                                  SettingsService.setShowLatin(val);
+                                },
+                              ),
+                              SwitchListTile(
+                                title: Text('Tampilkan Terjemahan', style: TextStyle(color: context.textPrimary)),
+                                value: _showTranslation,
+                                activeThumbColor: context.primaryAdaptive,
+                                onChanged: (val) {
+                                  setModalState(() => _showTranslation = val);
+                                  setState(() => _showTranslation = val);
+                                  SettingsService.setShowTranslation(val);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -236,7 +272,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
       body: versesAsync.when(
         data: (verses) {
           if (verses.isEmpty) {
-            return const Center(child: Text('Tidak ada data ayat.'));
+            return Center(child: Text('Tidak ada data ayat.', style: TextStyle(color: context.textSecondary)));
           }
 
           return ListView.builder(
@@ -252,19 +288,21 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                   margin: const EdgeInsets.only(bottom: 20, top: 8),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F3A26).withValues(alpha: 0.05),
+                    color: isDark
+                        ? AppColors.cardDarkSecondary
+                        : const Color(0xFF0F3A26).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: const Color(0xFFE2B75A).withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F3A26),
+                        color: context.arabicColor,
                       ),
                     ),
                   ),
@@ -282,11 +320,12 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -302,7 +341,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F3A26).withValues(alpha: 0.06),
+                        color: isDark
+                            ? AppColors.cardDarkSecondary
+                            : const Color(0xFF0F3A26).withValues(alpha: 0.06),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           topRight: Radius.circular(16),
@@ -316,7 +357,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F3A26),
+                              color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -335,7 +376,9 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                               isThisPlaying
                                   ? Icons.pause_circle_filled
                                   : Icons.play_circle_outline,
-                              color: const Color(0xFF0F3A26),
+                              color: isThisPlaying
+                                  ? const Color(0xFFE2B75A)
+                                  : (isDark ? Colors.white70 : const Color(0xFF0F3A26)),
                             ),
                             onPressed: () => _playAudio(
                               verse.verseNumber,
@@ -350,14 +393,14 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                                   : Icons.bookmark_border,
                               color: isBookmarked
                                   ? const Color(0xFFE2B75A)
-                                  : Colors.grey[700],
+                                  : context.textSecondary,
                             ),
                             onPressed: () => _toggleBookmark(verse, arabicText),
                           ),
                           // Copy
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20),
-                            color: Colors.grey[700],
+                            color: context.textSecondary,
                             onPressed: () => _copyVerse(verse, arabicText),
                           ),
                         ],
@@ -378,7 +421,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                                 fontSize: _fontSize,
                                 height: 2.0,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1E293B),
+                                color: context.arabicColor,
                               ),
                             ),
                           const SizedBox(height: 12),
@@ -386,10 +429,10 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                           if (_showLatin && verse.latin.isNotEmpty) ...[
                             Text(
                               verse.latin,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontStyle: FontStyle.italic,
-                                color: Color(0xFF059669),
+                                color: context.latinColor,
                                 height: 1.4,
                               ),
                             ),
@@ -402,7 +445,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
                               verse.translationId,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[800],
+                                color: context.textSecondary,
                                 height: 1.5,
                               ),
                             ),
@@ -416,8 +459,8 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             },
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: context.primaryAdaptive),
         ),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),

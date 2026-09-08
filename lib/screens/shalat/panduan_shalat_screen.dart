@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../data/shalat_data.dart';
 import '../../models/shalat_model.dart';
+import '../../theme/app_theme.dart';
 import 'gerakan_detail_screen.dart';
 import 'shalat_detail_screen.dart';
 
@@ -43,14 +45,16 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Panduan Shalat Lengkap',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         elevation: 0,
         bottom: PreferredSize(
@@ -250,16 +254,16 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
         const SizedBox(height: 20),
 
         // Section Title
-        const Row(
+        Row(
           children: [
-            Icon(Icons.directions_walk_rounded, color: Color(0xFF0F3A26), size: 18),
-            SizedBox(width: 8),
+            Icon(Icons.directions_walk_rounded, color: context.primaryAdaptive, size: 18),
+            const SizedBox(width: 8),
             Text(
               'Daftar Langkah Gerakan Shalat',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F3A26),
+                color: context.primaryAdaptive,
               ),
             ),
           ],
@@ -277,6 +281,8 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
   }
 
   Widget _buildMovementListTile(GerakanShalatItem item, int index) {
+    final isDark = context.isDark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -292,11 +298,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -314,14 +321,14 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                     item.imageAsset,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      color: context.badgeBg,
                       alignment: Alignment.center,
                       child: Text(
                         '${item.order}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F3A26),
+                          color: context.badgeIcon,
                         ),
                       ),
                     ),
@@ -341,15 +348,15 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                            color: context.badgeBg,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'Langkah ${item.order}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F3A26),
+                              color: context.badgeIcon,
                             ),
                           ),
                         ),
@@ -358,10 +365,10 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                     const SizedBox(height: 4),
                     Text(
                       item.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        color: context.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -372,7 +379,7 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                       style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: Colors.grey[600],
+                        color: context.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -380,9 +387,9 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.grey,
+                color: context.textSecondary,
               ),
             ],
           ),
@@ -395,6 +402,8 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
   // TAB 2, 3, 4: LIST OF SHALAT ITEMS
   // ==========================================
   Widget _buildShalatListTab(List<ShalatItem> items) {
+    final isDark = context.isDark;
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: items.length,
@@ -414,11 +423,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -430,12 +440,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                    color: context.badgeBg,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.mosque_rounded,
-                    color: Color(0xFF0F3A26),
+                    color: context.badgeIcon,
                     size: 24,
                   ),
                 ),
@@ -448,10 +458,10 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                         children: [
                           Text(
                             item.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
+                              color: context.textPrimary,
                             ),
                           ),
                         ],
@@ -465,15 +475,15 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2B75A).withValues(alpha: 0.15),
+                              color: AppColors.accentGold.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               item.hukum,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFB38928),
+                                color: isDark ? AppColors.accentGold : const Color(0xFFB38928),
                               ),
                             ),
                           ),
@@ -483,7 +493,7 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                               '• ${item.rakaat} Rakaat',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[600],
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
@@ -494,7 +504,7 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                         item.description,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: context.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -502,9 +512,9 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: Colors.grey,
+                  color: context.textSecondary,
                 ),
               ],
             ),
@@ -518,6 +528,7 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
   // TAB 5: WUDHU & SYARAT SHALAT
   // ==========================================
   Widget _buildWudhuSyaratTab() {
+    final isDark = context.isDark;
     final wudhuList = ShalatData.panduanWudhuList;
     final rukunSyarat = ShalatData.rukunSyaratList;
 
@@ -525,16 +536,16 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
       padding: const EdgeInsets.all(16),
       children: [
         // Header Wudhu
-        const Row(
+        Row(
           children: [
-            Icon(Icons.water_drop_rounded, color: Color(0xFF0F3A26), size: 20),
-            SizedBox(width: 8),
+            Icon(Icons.water_drop_rounded, color: context.primaryAdaptive, size: 20),
+            const SizedBox(width: 8),
             Text(
               'Panduan Berwudhu (8 Langkah)',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F3A26),
+                color: context.primaryAdaptive,
               ),
             ),
           ],
@@ -546,11 +557,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -568,14 +580,14 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                       w.imageAsset,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => Container(
-                        color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                        color: context.badgeBg,
                         alignment: Alignment.center,
                         child: Text(
                           '${w.step}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F3A26),
+                            color: context.badgeIcon,
                           ),
                         ),
                       ),
@@ -589,19 +601,19 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                     children: [
                       Text(
                         '${w.step}. ${w.title}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         w.description,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           height: 1.4,
-                          color: Color(0xFF475569),
+                          color: context.textSecondary,
                         ),
                       ),
                       if (w.arabic != null) ...[
@@ -609,20 +621,20 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                         Text(
                           w.arabic!,
                           textAlign: TextAlign.right,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             height: 1.8,
-                            color: Color(0xFF0F3A26),
+                            color: context.arabicColor,
                           ),
                         ),
                         if (w.latin != null)
                           Text(
                             w.latin!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontStyle: FontStyle.italic,
-                              color: Color(0xFF0F3A26),
+                              color: context.latinColor,
                             ),
                           ),
                       ],
@@ -637,16 +649,16 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
         const SizedBox(height: 20),
 
         // Header Rukun & Syarat
-        const Row(
+        Row(
           children: [
-            Icon(Icons.menu_book_rounded, color: Color(0xFF0F3A26), size: 20),
-            SizedBox(width: 8),
+            Icon(Icons.menu_book_rounded, color: context.primaryAdaptive, size: 20),
+            const SizedBox(width: 8),
             Text(
               'Ketentuan & Fiqih Shalat',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F3A26),
+                color: context.primaryAdaptive,
               ),
             ),
           ],
@@ -657,11 +669,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -676,10 +689,10 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
               ),
               title: Text(
                 section.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
+                  color: context.primaryAdaptive,
                 ),
               ),
               leading: const Icon(
@@ -697,20 +710,20 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               '• ',
                               style: TextStyle(
-                                color: Color(0xFF0F3A26),
+                                color: context.primaryAdaptive,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Expanded(
                               child: Text(
                                 it,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   height: 1.4,
-                                  color: Color(0xFF334155),
+                                  color: context.textPrimary,
                                 ),
                               ),
                             ),
@@ -733,6 +746,7 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
   // SEARCH RESULTS
   // ==========================================
   Widget _buildSearchResults() {
+    final isDark = context.isDark;
     final allShalat = [
       ...ShalatData.shalatFardhuList,
       ...ShalatData.shalatSunnahList,
@@ -756,11 +770,11 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[400]),
+            Icon(Icons.search_off_rounded, size: 64, color: context.textSecondary),
             const SizedBox(height: 12),
             Text(
               'Tidak ditemukan shalat dengan kata "$_searchQuery"',
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
           ],
         ),
@@ -771,12 +785,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
       padding: const EdgeInsets.all(16),
       children: [
         if (filteredShalat.isNotEmpty) ...[
-          const Text(
+          Text(
             'Hasil Pencarian Shalat',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0F3A26),
+              color: context.primaryAdaptive,
             ),
           ),
           const SizedBox(height: 10),
@@ -784,44 +798,49 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
             return Container(
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.mosque_rounded, color: Color(0xFF0F3A26)),
-                ),
-                title: Text(
-                  item.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                subtitle: Text(
-                  '${item.hukum} • ${item.waktu}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ShalatDetailScreen(shalat: item),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.badgeBg,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                },
+                    child: Icon(Icons.mosque_rounded, color: context.badgeIcon),
+                  ),
+                  title: Text(
+                    item.name,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: context.textPrimary),
+                  ),
+                  subtitle: Text(
+                    '${item.hukum} • ${item.waktu}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: context.textSecondary),
+                  ),
+                  trailing: Icon(Icons.chevron_right, color: context.textSecondary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShalatDetailScreen(shalat: item),
+                      ),
+                    );
+                  },
+                ),
               ),
             );
           }),
@@ -829,12 +848,12 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
         ],
 
         if (filteredGerakan.isNotEmpty) ...[
-          const Text(
+          Text(
             'Hasil Pencarian Gerakan Shalat',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0F3A26),
+              color: context.primaryAdaptive,
             ),
           ),
           const SizedBox(height: 10),

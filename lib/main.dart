@@ -5,6 +5,7 @@ import 'package:feature_discovery/feature_discovery.dart';
 import 'screens/splash_screen.dart';
 import 'services/notification_service.dart';
 import 'services/preferences_service.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,28 +19,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FeatureDiscovery(
-      recordStepsInSharedPreferences: false,
-      child: MaterialApp(
-        title: 'Zelixa Islamic',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF0F3A26),
-            primary: const Color(0xFF0F3A26),
-            secondary: const Color(0xFFE2B75A),
-            surface: Colors.white,
+    return ListenableBuilder(
+      listenable: PreferencesService(),
+      builder: (context, _) {
+        final prefs = PreferencesService();
+        return FeatureDiscovery(
+          recordStepsInSharedPreferences: false,
+          child: MaterialApp(
+            title: 'Zelixa Islamic',
+            debugShowCheckedModeBanner: false,
+            themeMode: prefs.themeMode,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            home: const SplashScreen(),
           ),
-          scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-          useMaterial3: true,
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF0F3A26),
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-        ),
-        home: const SplashScreen(),
-      ),
+        );
+      },
     );
   }
 }

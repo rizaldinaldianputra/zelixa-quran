@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/quran_models.dart';
 import '../../providers/quran_provider.dart';
-import '../../services/bookmark_service.dart';
+import '../../models/quran_models.dart';
 import '../../data/juz_data.dart';
+import '../../services/bookmark_service.dart';
+import '../../theme/app_theme.dart';
 import '../surah_detail_screen.dart';
 
 class QuranTabScreen extends ConsumerStatefulWidget {
@@ -31,11 +32,11 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
 
   Future<void> _loadBookmarksAndHistory() async {
     final b = await BookmarkService.getBookmarks();
-    final lr = await BookmarkService.getLastRead();
+    final l = await BookmarkService.getLastRead();
     if (mounted) {
       setState(() {
         _bookmarks = b;
-        _lastRead = lr;
+        _lastRead = l;
       });
     }
   }
@@ -49,16 +50,17 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
     final chaptersAsync = ref.watch(chaptersProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Al-Qur\'an Al-Karim',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         elevation: 0,
         bottom: PreferredSize(
@@ -71,11 +73,13 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                 child: Container(
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? AppColors.cardDarkSecondary : Colors.white,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.borderColor),
                   ),
                   child: TextField(
                     controller: _searchController,
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
                     onChanged: (val) {
                       setState(() {
                         _searchQuery = val.trim();
@@ -83,11 +87,14 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                     },
                     decoration: InputDecoration(
                       hintText: 'Cari surah atau terjemahan...',
-                      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                      prefixIcon: const Icon(Icons.search, color: Color(0xFF0F3A26)),
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(Icons.search, color: context.primaryAdaptive),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
+                              icon: Icon(Icons.clear, size: 18, color: context.textSecondary),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() => _searchQuery = '');
@@ -134,6 +141,7 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
   }
 
   Widget _buildSearchResults() {
+    final isDark = context.isDark;
     final searchAsync = ref.watch(searchQuranProvider(_searchQuery));
 
     return searchAsync.when(
@@ -143,11 +151,11 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                Icon(Icons.search_off, size: 64, color: context.textSecondary),
                 const SizedBox(height: 12),
                 Text(
-                  'Tidak ditemukan ayat untuk "$_searchQuery"',
-                  style: TextStyle(color: Colors.grey[600]),
+                  'Tidak ditemukan hasil untuk "$_searchQuery"',
+                  style: TextStyle(color: context.textSecondary),
                 ),
               ],
             ),
@@ -157,14 +165,14 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: results.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final row = results[index];
             final surahNumber = row['surah_number'] as int;
             final verseNumber = row['verse_number'] as int;
-            final surahLatin = row['surah_name_latin'] as String? ?? 'Surah';
+            final surahLatin = row['surah_name_latin'] as String? ?? '';
             final translation = row['translation_id'] as String? ?? '';
-            final latin = row['latin'] as String? ?? '';
+            final latin = row['verse_latin'] as String? ?? '';
 
             return InkWell(
               onTap: () {
@@ -182,11 +190,12 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: context.borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                       blurRadius: 6,
                     ),
                   ],
@@ -202,7 +211,7 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F3A26),
+                            color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -220,17 +229,17 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                       const SizedBox(height: 8),
                       Text(
                         latin,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontStyle: FontStyle.italic,
-                          color: Color(0xFF059669),
+                          color: context.latinColor,
                         ),
                       ),
                     ],
                     const SizedBox(height: 6),
                     Text(
                       translation,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      style: TextStyle(fontSize: 13, color: context.textSecondary),
                     ),
                   ],
                 ),
@@ -239,89 +248,96 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
           },
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+      loading: () => Center(
+        child: CircularProgressIndicator(color: context.primaryAdaptive),
       ),
       error: (err, _) => Center(child: Text('Error: $err')),
     );
   }
 
   Widget _buildSurahTab(AsyncValue<List<Chapter>> chaptersAsync) {
+    final isDark = context.isDark;
+
     return chaptersAsync.when(
       data: (chapters) {
         if (chapters.isEmpty) {
-          return const Center(child: Text('Tidak ada data surah.'));
+          return Center(child: Text('Tidak ada data surah.', style: TextStyle(color: context.textSecondary)));
         }
 
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: chapters.length,
-          separatorBuilder: (_, _) => const Divider(height: 1, indent: 76),
+          separatorBuilder: (_, _) => Divider(height: 1, indent: 76, color: context.borderColor),
           itemBuilder: (context, index) {
             final chapter = chapters[index];
-            return ListTile(
-              leading: Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2B75A).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFE2B75A).withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Text(
-                  '${chapter.surahNumber}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F3A26),
-                  ),
-                ),
-              ),
-              title: Text(
-                chapter.surahNameLatin,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              subtitle: Text(
-                '${chapter.revelationPlace.toUpperCase()} • ${chapter.numVerses} AYAT',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              trailing: Text(
-                chapter.surahName,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
-                ),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => SurahDetailScreen(
-                      surahNumber: chapter.surahNumber,
-                      surahName: chapter.surahNameLatin,
+            return Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2B75A).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFE2B75A).withValues(alpha: 0.4),
                     ),
                   ),
-                ).then((_) => _loadBookmarksAndHistory());
-              },
+                  child: Text(
+                    '${chapter.surahNumber}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  chapter.surahNameLatin,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: context.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  '${chapter.revelationPlace.toUpperCase()} • ${chapter.numVerses} AYAT',
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+                trailing: Text(
+                  chapter.surahName,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: context.arabicColor,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SurahDetailScreen(
+                        surahNumber: chapter.surahNumber,
+                        surahName: chapter.surahNameLatin,
+                      ),
+                    ),
+                  ).then((_) => _loadBookmarksAndHistory());
+                },
+              ),
             );
           },
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+      loading: () => Center(
+        child: CircularProgressIndicator(color: context.primaryAdaptive),
       ),
       error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 
   Widget _buildJuzTab(AsyncValue<List<Chapter>> chaptersAsync) {
+    final isDark = context.isDark;
+
     return ListView.separated(
       padding: const EdgeInsets.all(12),
       itemCount: JuzData.list.length,
@@ -344,11 +360,12 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -361,7 +378,7 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                   height: 42,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F3A26),
+                    color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -380,16 +397,16 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                     children: [
                       Text(
                         'Juz ${juz.number}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F3A26),
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Mulai: ${juz.startSurahName} ayat ${juz.startVerse}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, color: context.textSecondary),
                       ),
                     ],
                   ),
@@ -411,21 +428,23 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
   }
 
   Widget _buildBookmarkTab() {
+    final isDark = context.isDark;
+
     if (_bookmarks.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bookmark_border, size: 64, color: Colors.grey[400]),
+            Icon(Icons.bookmark_border, size: 64, color: context.textSecondary),
             const SizedBox(height: 12),
             Text(
               'Belum ada ayat yang ditandai',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Tekan ikon bookmark pada ayat untuk menyimpannya di sini',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
             ),
           ],
         ),
@@ -441,17 +460,18 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                 blurRadius: 8,
               ),
             ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -459,7 +479,7 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26),
+                      color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -476,27 +496,34 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                     onPressed: () async {
                       await BookmarkService.removeBookmark(b.surahNumber, b.verseNumber);
                       _loadBookmarksAndHistory();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Penanda ayat dihapus'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ],
               ),
-              if (b.arabicText.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  b.arabicText,
-                  textAlign: TextAlign.right,
-                  textDirection: TextDirection.rtl,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
+              const SizedBox(height: 10),
+              Text(
+                b.arabicText,
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  fontSize: 20,
+                  height: 1.8,
+                  fontWeight: FontWeight.bold,
+                  color: context.arabicColor,
                 ),
-              ],
+              ),
               const SizedBox(height: 8),
               Text(
                 b.translation,
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                style: TextStyle(fontSize: 13, color: context.textSecondary),
               ),
               const SizedBox(height: 12),
               Align(
@@ -505,7 +532,7 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
                   icon: const Icon(Icons.arrow_forward, size: 16),
                   label: const Text('Buka Surah'),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF0F3A26),
+                    foregroundColor: context.primaryAdaptive,
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -533,11 +560,11 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: Colors.grey[400]),
+            Icon(Icons.history, size: 64, color: context.textSecondary),
             const SizedBox(height: 12),
             Text(
               'Belum ada riwayat membaca',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),

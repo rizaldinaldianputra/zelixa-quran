@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/doa_data.dart';
+import '../../theme/app_theme.dart';
 
 class DoaTabScreen extends StatefulWidget {
   const DoaTabScreen({super.key});
@@ -13,13 +14,9 @@ class DoaTabScreen extends StatefulWidget {
 class _DoaTabScreenState extends State<DoaTabScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Doa Harian state
   String _selectedCategory = 'Semua';
   String _searchDoa = '';
-
-  // Dzikir state
-  String _selectedDzikirType = 'shalat'; // 'shalat', 'pagi', 'petang'
+  String _selectedDzikirType = 'shalat';
   final Map<int, int> _dzikirCounters = {};
 
   @override
@@ -36,14 +33,16 @@ class _DoaTabScreenState extends State<DoaTabScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Doa & Dzikir',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         elevation: 0,
         bottom: TabBar(
@@ -75,6 +74,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
   }
 
   Widget _buildDoaHarianTab() {
+    final isDark = context.isDark;
     final categories = [
       'Semua',
       'Tidur',
@@ -106,20 +106,28 @@ class _DoaTabScreenState extends State<DoaTabScreen>
           child: Container(
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? AppColors.cardDarkSecondary : Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4),
+                BoxShadow(
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 4,
+                ),
               ],
             ),
             child: TextField(
+              style: TextStyle(color: context.textPrimary, fontSize: 13),
               onChanged: (val) => setState(() => _searchDoa = val),
               decoration: InputDecoration(
                 hintText: 'Cari doa harian...',
-                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                prefixIcon: const Icon(
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
                   Icons.search,
-                  color: Color(0xFF0F3A26),
+                  color: context.primaryAdaptive,
                   size: 20,
                 ),
                 border: InputBorder.none,
@@ -143,19 +151,21 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               return ChoiceChip(
                 label: Text(cat),
                 selected: isSelected,
-                selectedColor: const Color(0xFF0F3A26),
+                selectedColor: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black,
+                  color: isSelected
+                      ? (isDark ? const Color(0xFFE2B75A) : Colors.white)
+                      : context.textPrimary,
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
-                backgroundColor: Colors.white,
+                backgroundColor: context.cardColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                   side: BorderSide(
                     color: isSelected
-                        ? const Color(0xFF0F3A26)
-                        : Colors.grey.shade300,
+                        ? context.primaryAdaptive
+                        : context.borderColor,
                   ),
                 ),
                 onSelected: (selected) {
@@ -173,7 +183,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               ? Center(
                   child: Text(
                     'Tidak ada doa ditemukan.',
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                 )
               : ListView.separated(
@@ -185,11 +195,12 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardColor,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.borderColor),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
+                            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -207,24 +218,23 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0F3A26)
-                                      .withValues(alpha: 0.08),
+                                  color: context.badgeBg,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   doa.category,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F3A26),
+                                    color: context.badgeIcon,
                                   ),
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.copy,
                                   size: 18,
-                                  color: Colors.grey,
+                                  color: context.textSecondary,
                                 ),
                                 onPressed: () {
                                   Clipboard.setData(
@@ -248,10 +258,10 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                           const SizedBox(height: 4),
                           Text(
                             doa.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
+                              color: context.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -259,20 +269,20 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                             doa.arabic,
                             textAlign: TextAlign.right,
                             textDirection: TextDirection.rtl,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               height: 1.8,
-                              color: Color(0xFF0F3A26),
+                              color: context.arabicColor,
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             doa.latin,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontStyle: FontStyle.italic,
-                              color: Color(0xFF059669),
+                              color: context.latinColor,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -280,16 +290,16 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                             doa.translation,
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[800],
+                              color: context.textSecondary,
                               height: 1.4,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             doa.source,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey,
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -303,6 +313,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
   }
 
   Widget _buildDzikirTab() {
+    final isDark = context.isDark;
     final types = [
       {'key': 'shalat', 'label': 'Setelah Shalat'},
       {'key': 'pagi', 'label': 'Dzikir Pagi'},
@@ -321,10 +332,14 @@ class _DoaTabScreenState extends State<DoaTabScreen>
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.borderColor),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),
+              BoxShadow(
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+                blurRadius: 6,
+              ),
             ],
           ),
           child: Row(
@@ -337,7 +352,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: isSel
-                          ? const Color(0xFF0F3A26)
+                          ? (isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26))
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -347,7 +362,9 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                        color: isSel ? Colors.white : Colors.grey[700],
+                        color: isSel
+                            ? (isDark ? const Color(0xFFE2B75A) : Colors.white)
+                            : context.textSecondary,
                       ),
                     ),
                   ),
@@ -371,14 +388,15 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: isComplete
-                      ? Border.all(color: const Color(0xFF059669), width: 1.5)
-                      : null,
+                  border: Border.all(
+                    color: isComplete ? AppColors.accentEmerald : context.borderColor,
+                    width: isComplete ? 1.5 : 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                     ),
                   ],
@@ -389,12 +407,14 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          item.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: context.textPrimary,
+                            ),
                           ),
                         ),
                         Container(
@@ -404,8 +424,8 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                           ),
                           decoration: BoxDecoration(
                             color: isComplete
-                                ? const Color(0xFF059669)
-                                : const Color(0xFF0F3A26).withValues(alpha: 0.1),
+                                ? AppColors.accentEmerald
+                                : context.badgeBg,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -415,7 +435,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                               fontWeight: FontWeight.bold,
                               color: isComplete
                                   ? Colors.white
-                                  : const Color(0xFF0F3A26),
+                                  : context.badgeIcon,
                             ),
                           ),
                         ),
@@ -426,34 +446,34 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                       item.arabic,
                       textAlign: TextAlign.right,
                       textDirection: TextDirection.rtl,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         height: 1.8,
-                        color: Color(0xFF0F3A26),
+                        color: context.arabicColor,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       item.latin,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
-                        color: Color(0xFF059669),
+                        color: context.latinColor,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       item.translation,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      style: TextStyle(fontSize: 13, color: context.textSecondary),
                     ),
                     if (item.note.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text(
                         item.note,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -465,8 +485,8 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: isComplete
-                                  ? const Color(0xFF059669)
-                                  : const Color(0xFF0F3A26),
+                                  ? AppColors.accentEmerald
+                                  : (isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26)),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -497,10 +517,10 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                         if (currentCount > 0) ...[
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.refresh,
                               size: 20,
-                              color: Colors.grey,
+                              color: context.textSecondary,
                             ),
                             tooltip: 'Reset',
                             onPressed: () {
@@ -523,6 +543,8 @@ class _DoaTabScreenState extends State<DoaTabScreen>
   }
 
   Widget _buildAsmaulHusnaTab() {
+    final isDark = context.isDark;
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -537,11 +559,12 @@ class _DoaTabScreenState extends State<DoaTabScreen>
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -558,29 +581,29 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                 ),
                 child: Text(
                   '${item.number}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F3A26),
+                    color: isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                   ),
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 item.arabic,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
+                  color: context.arabicColor,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 item.latin,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF059669),
+                  color: context.latinColor,
                 ),
               ),
               const SizedBox(height: 2),
@@ -589,7 +612,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                style: TextStyle(fontSize: 11, color: context.textSecondary),
               ),
             ],
           ),

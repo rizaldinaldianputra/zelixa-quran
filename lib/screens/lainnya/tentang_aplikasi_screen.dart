@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme.dart';
+
 class TentangAplikasiScreen extends StatelessWidget {
   const TentangAplikasiScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Tentang Aplikasi',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+          ),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
-        foregroundColor: Colors.white,
+        backgroundColor: context.isDark ? AppColors.darkCardSurface : const Color(0xFF0F3A26),
+        foregroundColor: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -24,11 +30,14 @@ class TentangAplikasiScreen extends StatelessWidget {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: const Color(0xFF0F3A26),
+                color: context.isDark ? AppColors.darkCardElevated : const Color(0xFF0F3A26),
                 borderRadius: BorderRadius.circular(24),
+                border: context.isDark ? Border.all(color: context.borderColor) : null,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F3A26).withValues(alpha: 0.25),
+                    color: context.isDark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : const Color(0xFF0F3A26).withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -41,18 +50,18 @@ class TentangAplikasiScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Zelixa Islamic',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F3A26),
+                color: context.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F3A26),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Versi 1.0.0',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 24),
 
@@ -60,22 +69,23 @@ class TentangAplikasiScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
                     blurRadius: 8,
                   ),
                 ],
               ),
-              child: const Text(
+              child: Text(
                 'Zelixa Islamic adalah aplikasi Al-Qur\'an digital modern, cepat, dan mudah digunakan yang dirancang untuk menemani ibadah harian kaum muslimin. Dilengkapi dengan Al-Qur\'an lengkap 30 juz, transliterasi Latin, terjemahan resmi Kemenag RI, audio tilawah per ayat, doa harian, dzikir, jadwal shalat akurat, kompas arah kiblat, serta tasbih digital.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.6,
-                  color: Color(0xFF334155),
+                  color: context.textPrimary,
                 ),
               ),
             ),
@@ -85,11 +95,12 @@ class TentangAplikasiScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
                     blurRadius: 8,
                   ),
                 ],
@@ -97,28 +108,31 @@ class TentangAplikasiScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Sumber Data & Kredit',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Color(0xFF0F3A26),
+                      color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                     ),
                   ),
                   const SizedBox(height: 12),
                   _buildCreditRow(
+                    context,
                     Icons.book,
                     'Teks Arab & Terjemahan',
                     'Kementerian Agama Republik Indonesia (Kemenag RI)',
                   ),
                   const SizedBox(height: 10),
                   _buildCreditRow(
+                    context,
                     Icons.audiotrack,
                     'Murottal Audio',
                     'Syaikh Misyari Rasyid Al-Afasi',
                   ),
                   const SizedBox(height: 10),
                   _buildCreditRow(
+                    context,
                     Icons.calendar_today,
                     'Jadwal Shalat',
                     'Algoritma Perhitungan Astronomi Kemenag',
@@ -128,9 +142,9 @@ class TentangAplikasiScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            const Text(
+            Text(
               'Dibuat dengan ❤️ untuk Umat',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
             ),
           ],
         ),
@@ -138,11 +152,15 @@ class TentangAplikasiScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCreditRow(IconData icon, String title, String subtitle) {
+  Widget _buildCreditRow(BuildContext context, IconData icon, String title, String subtitle) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF0F3A26)),
+        Icon(
+          icon,
+          size: 18,
+          color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -150,14 +168,15 @@ class TentangAplikasiScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
+                  color: context.textPrimary,
                 ),
               ),
               Text(
                 subtitle,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
               ),
             ],
           ),

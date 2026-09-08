@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/prayer_service.dart';
 import '../../services/bookmark_service.dart';
 import '../../data/doa_data.dart';
+import '../../theme/app_theme.dart';
 import '../surah_detail_screen.dart';
 import '../shalat/panduan_shalat_screen.dart';
 import '../zakat/kalkulator_zakat_screen.dart';
@@ -79,14 +80,15 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
     // Pick an inspirational doa or ayah for today
     final randomDoa = DoaData.doaHarian[9]; // Doa Sapu Jagat
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         title: Row(
           children: [
             Container(
@@ -130,19 +132,21 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Greeting & Header
+              // Greeting & City
               _buildGreetingHeader(),
               const SizedBox(height: 16),
 
-              // Card Lanjutkan Membaca
+              // Last Read Card
               _buildLastReadCard(),
               const SizedBox(height: 16),
 
-              // Card Jadwal Shalat
-              _buildPrayerScheduleCard(),
-              const SizedBox(height: 16),
+              // Prayer Time Summary Card
+              if (_prayerSchedule != null) ...[
+                _buildPrayerScheduleCard(),
+                const SizedBox(height: 16),
+              ],
 
-              // Quick Shortcuts Grid
+              // Quick Actions Grid
               _buildQuickActions(),
               const SizedBox(height: 16),
 
@@ -165,14 +169,16 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildGreetingHeader() {
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -184,27 +190,27 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Assalāmu ‘alaikum,',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Semoga Harimu Penuh Berkah',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
+                  color: context.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.location_city, size: 14, color: Colors.grey),
+                  Icon(Icons.location_city, size: 14, color: context.textSecondary),
                   const SizedBox(width: 4),
                   Text(
                     '${_selectedCity.name}, Indonesia',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: context.textSecondary),
                   ),
                 ],
               ),
@@ -213,10 +219,10 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+              color: context.badgeBg,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.mosque, color: Color(0xFF0F3A26), size: 28),
+            child: Icon(Icons.mosque, color: context.badgeIcon, size: 28),
           ),
         ],
       ),
@@ -298,12 +304,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            ),
-            icon: const Icon(Icons.play_arrow_rounded, size: 20),
-            label: const Text(
-              'Lanjutkan',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             onPressed: () {
               Navigator.push(
@@ -312,10 +313,16 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                   builder: (_) => SurahDetailScreen(
                     surahNumber: surahNum,
                     surahName: surahName,
+                    initialVerseIndex: verseNum > 1 ? verseNum - 1 : 0,
                   ),
                 ),
-              ).then((_) => _loadData());
+              );
             },
+            icon: const Icon(Icons.play_arrow, size: 18),
+            label: const Text(
+              'Lanjutkan',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -323,30 +330,29 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildPrayerScheduleCard() {
-    if (_prayerSchedule == null) return const SizedBox.shrink();
-
+    final isDark = context.isDark;
+    final schedule = _prayerSchedule!;
     final next = _nextPrayer;
-    final remainingText = next != null
-        ? _formatDuration(next.remaining)
-        : '--:--:--';
-    final nextName = next?.name ?? 'Shalat';
+    final nextName = next != null ? next.name : 'Subuh';
+    final remainingText = next != null ? _formatDuration(next.remaining) : '--:--:--';
 
     final scheduleList = [
-      {'name': 'Subuh', 'time': _prayerSchedule!.subuh},
-      {'name': 'Dzuhur', 'time': _prayerSchedule!.dzuhur},
-      {'name': 'Ashar', 'time': _prayerSchedule!.ashar},
-      {'name': 'Maghrib', 'time': _prayerSchedule!.maghrib},
-      {'name': 'Isya', 'time': _prayerSchedule!.isya},
+      {'name': 'Subuh', 'time': schedule.subuh},
+      {'name': 'Dzuhur', 'time': schedule.dzuhur},
+      {'name': 'Ashar', 'time': schedule.ashar},
+      {'name': 'Maghrib', 'time': schedule.maghrib},
+      {'name': 'Isya', 'time': schedule.isya},
     ];
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -360,18 +366,18 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.access_time_filled,
-                    color: Color(0xFF0F3A26),
+                    color: context.primaryAdaptive,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Jadwal Shalat',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Color(0xFF0F3A26),
+                      color: context.textPrimary,
                     ),
                   ),
                 ],
@@ -399,8 +405,8 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isTarget
-                      ? const Color(0xFF0F3A26)
-                      : const Color(0xFFF1F5F9),
+                      ? (isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26))
+                      : context.cardSecondaryColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -410,7 +416,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: isTarget ? Colors.white70 : Colors.grey[700],
+                        color: isTarget ? Colors.white70 : context.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -421,7 +427,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                         fontWeight: FontWeight.bold,
                         color: isTarget
                             ? const Color(0xFFE2B75A)
-                            : Colors.black,
+                            : context.textPrimary,
                       ),
                     ),
                   ],
@@ -435,6 +441,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildQuickActions() {
+    final isDark = context.isDark;
     final actions = [
       {'icon': Icons.menu_book_rounded, 'label': 'Al-Qur\'an', 'tab': 1},
       {
@@ -456,11 +463,12 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             width: (MediaQuery.of(context).size.width - 32 - 36) / 4,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -471,12 +479,12 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                    color: context.badgeBg,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     act['icon'] as IconData,
-                    color: const Color(0xFF0F3A26),
+                    color: context.badgeIcon,
                     size: 24,
                   ),
                 ),
@@ -484,10 +492,10 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 Text(
                   act['label'] as String,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: context.textPrimary,
                   ),
                 ),
               ],
@@ -574,6 +582,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildKalkulatorZakatBanner() {
+    final isDark = context.isDark;
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -585,14 +594,14 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFF0F3A26).withValues(alpha: 0.12),
+            color: context.borderColor,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -603,39 +612,39 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                color: context.badgeBg,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.calculate_rounded,
-                color: Color(0xFF0F3A26),
+                color: context.badgeIcon,
                 size: 26,
               ),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Kalkulator Zakat',
                     style: TextStyle(
-                      color: Color(0xFF1E293B),
+                      color: context.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
                   Text(
                     'Hitung Zakat Fitrah, Penghasilan & Maal otomatis',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(color: context.textSecondary, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.grey,
+              color: context.textSecondary,
               size: 16,
             ),
           ],
@@ -645,17 +654,18 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   }
 
   Widget _buildDailyInspirationCard(DoaItem doa) {
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFFE2B75A).withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -672,18 +682,18 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                 size: 18,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Ayat / Doa Pilihan',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Color(0xFF0F3A26),
+                  color: context.primaryAdaptive,
                 ),
               ),
               const Spacer(),
               Text(
                 doa.source,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(fontSize: 11, color: context.textSecondary),
               ),
             ],
           ),
@@ -692,26 +702,26 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             doa.arabic,
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               height: 1.8,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0F3A26),
+              color: context.arabicColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             doa.latin,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontStyle: FontStyle.italic,
-              color: Color(0xFF059669),
+              color: context.latinColor,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             '"${doa.translation}"',
-            style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
         ],
       ),
@@ -724,41 +734,55 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: context.cardColor,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Pilih Kota untuk Jadwal Shalat',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: PrayerService.cities.length,
-                  itemBuilder: (context, index) {
-                    final c = PrayerService.cities[index];
-                    final isSelected = c.name == _selectedCity.name;
-                    return ListTile(
-                      title: Text(c.name),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Color(0xFF0F3A26))
-                          : null,
-                      onTap: () async {
-                        await PrayerService.setSelectedCity(index);
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                        _loadData();
-                      },
-                    );
-                  },
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pilih Kota untuk Jadwal Shalat',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: context.textPrimary,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: PrayerService.cities.length,
+                    itemBuilder: (context, index) {
+                      final c = PrayerService.cities[index];
+                      final isSelected = c.name == _selectedCity.name;
+                      return ListTile(
+                        title: Text(
+                          c.name,
+                          style: TextStyle(
+                            color: isSelected ? context.primaryAdaptive : context.textPrimary,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Icon(Icons.check, color: context.primaryAdaptive)
+                            : null,
+                        onTap: () async {
+                          await PrayerService.setSelectedCity(index);
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                          _loadData();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

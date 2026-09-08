@@ -6,6 +6,7 @@ import '../../services/prayer_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/preferences_service.dart';
 import '../../services/widget_service.dart';
+import '../../theme/app_theme.dart';
 
 class JadwalShalatScreen extends StatefulWidget {
   const JadwalShalatScreen({super.key});
@@ -96,7 +97,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          backgroundColor: const Color(0xFF0F3A26),
+          backgroundColor: context.isDark ? AppColors.cardDarkSecondary : const Color(0xFF0F3A26),
           duration: const Duration(seconds: 2),
           content: Row(
             children: [
@@ -136,27 +137,13 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          backgroundColor: const Color(0xFF0F3A26),
+          backgroundColor: context.isDark ? AppColors.cardDarkSecondary : const Color(0xFF0F3A26),
           duration: const Duration(seconds: 2),
-          content: Row(
-            children: [
-              Icon(
-                enable
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                color: enable ? const Color(0xFFE2B75A) : Colors.white70,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  enable
-                      ? 'Semua pengingat shalat dinyalakan'
-                      : 'Semua pengingat shalat dimatikan',
-                  style: const TextStyle(fontSize: 13, color: Colors.white),
-                ),
-              ),
-            ],
+          content: Text(
+            enable
+                ? 'Semua pengingat shalat dinyalakan'
+                : 'Semua pengingat shalat dimatikan',
+            style: const TextStyle(fontSize: 13, color: Colors.white),
           ),
         ),
       );
@@ -178,7 +165,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          backgroundColor: const Color(0xFF0F3A26),
+          backgroundColor: context.isDark ? AppColors.cardDarkSecondary : const Color(0xFF0F3A26),
           duration: const Duration(seconds: 2),
           content: Row(
             children: [
@@ -205,10 +192,13 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     if (_schedule == null) {
-      return const Scaffold(
+      return Scaffold(
+        backgroundColor: context.scaffoldBg,
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+          child: CircularProgressIndicator(color: context.primaryAdaptive),
         ),
       );
     }
@@ -268,13 +258,13 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Jadwal Shalat Lengkap',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -301,17 +291,17 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'all_on',
                 child: Row(
                   children: [
                     Icon(
                       Icons.notifications_active,
-                      color: Color(0xFF0F3A26),
+                      color: context.primaryAdaptive,
                       size: 20,
                     ),
-                    SizedBox(width: 10),
-                    Text('Nyalakan Semua Notifikasi'),
+                    const SizedBox(width: 10),
+                    const Text('Nyalakan Semua Notifikasi'),
                   ],
                 ),
               ),
@@ -336,7 +326,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                   children: [
                     Icon(
                       prefs.useAdzanSound ? Icons.volume_up : Icons.music_note,
-                      color: const Color(0xFF0F3A26),
+                      color: context.primaryAdaptive,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -363,17 +353,17 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'show_widget_guide',
                 child: Row(
                   children: [
                     Icon(
                       Icons.widgets_outlined,
-                      color: Color(0xFF0F3A26),
+                      color: context.primaryAdaptive,
                       size: 20,
                     ),
-                    SizedBox(width: 10),
-                    Text('Widget Home Screen HP'),
+                    const SizedBox(width: 10),
+                    const Text('Widget Home Screen HP'),
                   ],
                 ),
               ),
@@ -463,7 +453,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left),
+                  icon: Icon(Icons.chevron_left, color: context.textPrimary),
                   onPressed: () {
                     setState(() {
                       _selectedDate = _selectedDate.subtract(
@@ -475,14 +465,14 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                 ),
                 Text(
                   '${_selectedDate.day} ${_getMonth(_selectedDate.month)} ${_selectedDate.year}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F3A26),
+                    color: context.primaryAdaptive,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right),
+                  icon: Icon(Icons.chevron_right, color: context.textPrimary),
                   onPressed: () {
                     setState(() {
                       _selectedDate = _selectedDate.add(
@@ -500,12 +490,12 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                     blurRadius: 6,
                   ),
                 ],
@@ -515,14 +505,14 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      color: context.badgeBg,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       prefs.useAdzanSound
                           ? Icons.volume_up_rounded
                           : Icons.notifications_active_rounded,
-                      color: const Color(0xFF0F3A26),
+                      color: context.badgeIcon,
                       size: 20,
                     ),
                   ),
@@ -531,12 +521,12 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Pengingat Adzan & Shalat',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
-                            color: Color(0xFF1E293B),
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -544,7 +534,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                           'Ketuk ikon lonceng untuk atur tiap waktu shalat',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey.shade600,
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -560,8 +550,8 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: prefs.useAdzanSound
-                            ? const Color(0xFFFEF3C7)
-                            : const Color(0xFFE2E8F0),
+                            ? (isDark ? const Color(0xFF3B2F15) : const Color(0xFFFEF3C7))
+                            : context.cardSecondaryColor,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: prefs.useAdzanSound
@@ -579,7 +569,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                             size: 13,
                             color: prefs.useAdzanSound
                                 ? const Color(0xFFD97706)
-                                : Colors.grey.shade700,
+                                : context.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -589,7 +579,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                               fontWeight: FontWeight.bold,
                               color: prefs.useAdzanSound
                                   ? const Color(0xFFD97706)
-                                  : Colors.grey.shade700,
+                                  : context.textSecondary,
                             ),
                           ),
                         ],
@@ -622,21 +612,23 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: isNext ? const Color(0xFF0F3A26) : Colors.white,
+                    color: isNext
+                        ? (isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26))
+                        : context.cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isNext
-                          ? const Color(0xFF0F3A26)
+                          ? (isDark ? const Color(0xFF2A6E4F) : const Color(0xFF0F3A26))
                           : (isNotifActive
-                                ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                                : Colors.transparent),
+                                ? const Color(0xFFF59E0B).withValues(alpha: 0.3)
+                                : context.borderColor),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: isNext
                             ? const Color(0xFF0F3A26).withValues(alpha: 0.2)
-                            : Colors.black.withValues(alpha: 0.02),
+                            : (isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02)),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -649,7 +641,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                         decoration: BoxDecoration(
                           color: isNext
                               ? Colors.white.withValues(alpha: 0.12)
-                              : const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                              : context.badgeBg,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -657,7 +649,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                           size: 20,
                           color: isNext
                               ? const Color(0xFFE2B75A)
-                              : const Color(0xFF0F3A26),
+                              : context.badgeIcon,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -672,7 +664,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: isNext
                                     ? Colors.white
-                                    : const Color(0xFF1E293B),
+                                    : context.textPrimary,
                               ),
                             ),
                             if (canNotify) ...[
@@ -694,7 +686,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                                             : Colors.white54)
                                       : (isNotifActive
                                             ? const Color(0xFFD97706)
-                                            : Colors.grey.shade400),
+                                            : context.textSecondary),
                                 ),
                               ),
                             ],
@@ -708,7 +700,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                           fontWeight: FontWeight.bold,
                           color: isNext
                               ? const Color(0xFFE2B75A)
-                              : const Color(0xFF0F3A26),
+                              : context.primaryAdaptive,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -726,10 +718,10 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                                     ? (isNext
                                           ? const Color(0xFFE2B75A)
                                                 .withValues(alpha: 0.25)
-                                          : const Color(0xFFFEF3C7))
+                                          : (isDark ? const Color(0xFF3A2D13) : const Color(0xFFFEF3C7)))
                                     : (isNext
                                           ? Colors.white.withValues(alpha: 0.08)
-                                          : const Color(0xFFF1F5F9)),
+                                          : context.cardSecondaryColor),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isNotifActive
@@ -742,7 +734,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                                             ? Colors.white.withValues(
                                                 alpha: 0.1,
                                               )
-                                            : Colors.transparent),
+                                            : context.borderColor),
                                   width: 1.2,
                                 ),
                                 boxShadow: isNotifActive
@@ -770,7 +762,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                                           : const Color(0xFFD97706))
                                     : (isNext
                                           ? Colors.white38
-                                          : Colors.grey.shade400),
+                                          : context.textSecondary),
                               ),
                             ),
                           ),
@@ -794,41 +786,55 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: context.cardColor,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Pilih Kota',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: PrayerService.cities.length,
-                  itemBuilder: (context, index) {
-                    final c = PrayerService.cities[index];
-                    final isSel = c.name == _city.name;
-                    return ListTile(
-                      title: Text(c.name),
-                      trailing: isSel
-                          ? const Icon(Icons.check, color: Color(0xFF0F3A26))
-                          : null,
-                      onTap: () async {
-                        await PrayerService.setSelectedCity(index);
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                        _loadSchedule();
-                      },
-                    );
-                  },
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pilih Kota',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: context.textPrimary,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: PrayerService.cities.length,
+                    itemBuilder: (context, index) {
+                      final c = PrayerService.cities[index];
+                      final isSel = c.name == _city.name;
+                      return ListTile(
+                        title: Text(
+                          c.name,
+                          style: TextStyle(
+                            color: isSel ? context.primaryAdaptive : context.textPrimary,
+                            fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: isSel
+                            ? Icon(Icons.check, color: context.primaryAdaptive)
+                            : null,
+                        onTap: () async {
+                          await PrayerService.setSelectedCity(index);
+                          if (!context.mounted) return;
+                          Navigator.pop(context);
+                          _loadSchedule();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -840,10 +846,12 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        final isDark = context.isDark;
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: context.cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: context.borderColor),
           ),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
@@ -855,7 +863,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: isDark ? Colors.white24 : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -866,30 +874,30 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.1),
+                      color: context.badgeBg,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.widgets_rounded,
-                      color: Color(0xFF0F3A26),
+                      color: context.badgeIcon,
                       size: 22,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Widget Jadwal Shalat di Home Screen',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F3A26),
+                      color: context.primaryAdaptive,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'Pasang jadwal shalat langsung di layar depan HP Anda tanpa perlu membuka aplikasi:',
-                style: TextStyle(fontSize: 13, color: Colors.black87),
+                style: TextStyle(fontSize: 13, color: context.textPrimary),
               ),
               const SizedBox(height: 12),
               _buildStepItem('1', 'Kembali ke Layar Utama (Home Screen) HP Anda.'),
@@ -904,7 +912,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                   icon: const Icon(Icons.sync_rounded),
                   label: const Text('Perbarui / Sinkronkan Data Widget'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F3A26),
+                    backgroundColor: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -921,11 +929,11 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                     if (ctx.mounted) Navigator.pop(ctx);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           behavior: SnackBarBehavior.floating,
-                          backgroundColor: Color(0xFF0F3A26),
-                          content: Text('Data widget jadwal shalat berhasil disinkronkan!'),
-                          duration: Duration(seconds: 2),
+                          backgroundColor: isDark ? AppColors.cardDarkSecondary : const Color(0xFF0F3A26),
+                          content: const Text('Data widget jadwal shalat berhasil disinkronkan!'),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     }
@@ -966,7 +974,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF334155)),
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
           ),
         ],

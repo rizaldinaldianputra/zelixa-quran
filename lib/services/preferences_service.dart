@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class PreferencesService extends ChangeNotifier {
   static final PreferencesService _instance = PreferencesService._internal();
@@ -11,6 +11,8 @@ class PreferencesService extends ChangeNotifier {
   bool _isNotificationEnabled = true;
   bool _useAdzanSound = true;
   bool _isFirstTimeFeatureDiscovery = true;
+  ThemeMode _themeMode = ThemeMode.system;
+
   final Map<String, bool> _prayerNotifications = {
     'Imsak': false,
     'Subuh': true,
@@ -24,6 +26,7 @@ class PreferencesService extends ChangeNotifier {
   bool get isNotificationEnabled => _isNotificationEnabled;
   bool get useAdzanSound => _useAdzanSound;
   bool get isFirstTimeFeatureDiscovery => _isFirstTimeFeatureDiscovery;
+  ThemeMode get themeMode => _themeMode;
 
   bool isPrayerNotificationEnabled(String prayerName) {
     if (!_isNotificationEnabled) return false;
@@ -40,11 +43,29 @@ class PreferencesService extends ChangeNotifier {
     _useAdzanSound = _prefs.getBool('useAdzanSound') ?? true;
     _isFirstTimeFeatureDiscovery = _prefs.getBool('isFirstTimeFeatureDiscovery') ?? true;
 
+    final savedTheme = _prefs.getString('zelixa_theme_mode') ?? 'system';
+    if (savedTheme == 'dark') {
+      _themeMode = ThemeMode.dark;
+    } else if (savedTheme == 'light') {
+      _themeMode = ThemeMode.light;
+    } else {
+      _themeMode = ThemeMode.system;
+    }
+
     for (var key in _prayerNotifications.keys) {
       final defaultValue = (key == 'Imsak' || key == 'Dhuha') ? false : true;
       _prayerNotifications[key] =
           _prefs.getBool('notif_prayer_$key') ?? defaultValue;
     }
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    String val = 'system';
+    if (mode == ThemeMode.dark) val = 'dark';
+    if (mode == ThemeMode.light) val = 'light';
+    await _prefs.setString('zelixa_theme_mode', val);
+    notifyListeners();
   }
 
   Future<void> setNotificationEnabled(bool value) async {

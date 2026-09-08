@@ -8,6 +8,7 @@ import 'ibadah/ibadah_tab_screen.dart';
 import 'lainnya/lainnya_tab_screen.dart';
 
 import '../services/preferences_service.dart';
+import '../theme/app_theme.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -53,6 +54,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const LainnyaTabScreen(),
     ];
 
+    final isDark = context.isDark;
+    final selectedIconColor = isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26);
+    final unselectedIconColor = isDark ? Colors.white60 : Colors.black54;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -60,10 +65,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: isDark ? Colors.black38 : Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -71,7 +76,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
-          backgroundColor: Colors.white,
+          backgroundColor: context.cardColor,
           indicatorColor: const Color(0xFFE2B75A).withValues(alpha: 0.25),
           elevation: 0,
           onDestinationSelected: (index) {
@@ -79,48 +84,48 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               _currentIndex = index;
             });
           },
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: Color(0xFF0F3A26)),
+              icon: Icon(Icons.home_outlined, color: unselectedIconColor),
+              selectedIcon: Icon(Icons.home, color: selectedIconColor),
               label: 'Beranda',
             ),
             NavigationDestination(
               icon: DescribedFeatureOverlay(
                 featureId: 'feature_quran_tab',
-                tapTarget: Icon(Icons.menu_book_outlined),
-                title: Text('Al-Qur\'an'),
-                description: Text('Baca dan dengarkan ayat suci di sini.'),
-                backgroundColor: Color(0xFF0F3A26),
-                targetColor: Color(0xFFE2B75A),
+                tapTarget: Icon(Icons.menu_book_outlined, color: unselectedIconColor),
+                title: const Text('Al-Qur\'an'),
+                description: const Text('Baca dan dengarkan ayat suci di sini.'),
+                backgroundColor: const Color(0xFF0F3A26),
+                targetColor: const Color(0xFFE2B75A),
                 textColor: Colors.white,
-                child: Icon(Icons.menu_book_outlined),
+                child: Icon(Icons.menu_book_outlined, color: unselectedIconColor),
               ),
-              selectedIcon: Icon(Icons.menu_book, color: Color(0xFF0F3A26)),
+              selectedIcon: Icon(Icons.menu_book, color: selectedIconColor),
               label: 'Al-Qur\'an',
             ),
             NavigationDestination(
-              icon: Icon(Icons.volunteer_activism_outlined),
-              selectedIcon: Icon(Icons.volunteer_activism, color: Color(0xFF0F3A26)),
+              icon: Icon(Icons.volunteer_activism_outlined, color: unselectedIconColor),
+              selectedIcon: Icon(Icons.volunteer_activism, color: selectedIconColor),
               label: 'Doa',
             ),
             NavigationDestination(
               icon: DescribedFeatureOverlay(
                 featureId: 'feature_ibadah_tab',
-                tapTarget: Icon(Icons.mosque_outlined),
-                title: Text('Ibadah'),
-                description: Text('Jadwal shalat, arah kiblat, dan tasbih digital.'),
-                backgroundColor: Color(0xFF0F3A26),
-                targetColor: Color(0xFFE2B75A),
+                tapTarget: Icon(Icons.mosque_outlined, color: unselectedIconColor),
+                title: const Text('Ibadah'),
+                description: const Text('Jadwal shalat, arah kiblat, dan tasbih digital.'),
+                backgroundColor: const Color(0xFF0F3A26),
+                targetColor: const Color(0xFFE2B75A),
                 textColor: Colors.white,
-                child: Icon(Icons.mosque_outlined),
+                child: Icon(Icons.mosque_outlined, color: unselectedIconColor),
               ),
-              selectedIcon: Icon(Icons.mosque, color: Color(0xFF0F3A26)),
+              selectedIcon: Icon(Icons.mosque, color: selectedIconColor),
               label: 'Ibadah',
             ),
             NavigationDestination(
-              icon: Icon(Icons.more_horiz_outlined),
-              selectedIcon: Icon(Icons.more_horiz, color: Color(0xFF0F3A26)),
+              icon: Icon(Icons.more_horiz_outlined, color: unselectedIconColor),
+              selectedIcon: Icon(Icons.more_horiz, color: selectedIconColor),
               label: 'Lainnya',
             ),
           ],

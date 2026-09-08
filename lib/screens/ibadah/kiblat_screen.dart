@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_qiblah/flutter_qiblah.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../theme/app_theme.dart';
+
 class KiblatScreen extends StatefulWidget {
   const KiblatScreen({super.key});
 
@@ -14,14 +16,16 @@ class KiblatScreen extends StatefulWidget {
 class _KiblatScreenState extends State<KiblatScreen> {
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Arah Kiblat',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
@@ -29,13 +33,13 @@ class _KiblatScreenState extends State<KiblatScreen> {
           future: FlutterQiblah.checkLocationStatus(),
           builder: (context, AsyncSnapshot<LocationStatus> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+              return Center(
+                child: CircularProgressIndicator(color: context.primaryAdaptive),
               );
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error.toString()}'));
+              return Center(child: Text('Error: ${snapshot.error.toString()}', style: TextStyle(color: context.textPrimary)));
             }
 
             if (snapshot.data!.enabled &&
@@ -57,29 +61,31 @@ class LocationErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.location_off, size: 100, color: Colors.red),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Layanan Lokasi Tidak Aktif',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.textPrimary),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Text(
               'Aplikasi membutuhkan akses lokasi untuk menentukan arah kiblat yang akurat.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: context.textSecondary),
             ),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F3A26),
+              backgroundColor: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
               foregroundColor: Colors.white,
             ),
             onPressed: () {
@@ -98,17 +104,19 @@ class QiblahCompass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return StreamBuilder(
       stream: FlutterQiblah.qiblahStream,
       builder: (context, AsyncSnapshot<QiblahDirection> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+          return Center(
+            child: CircularProgressIndicator(color: context.primaryAdaptive),
           );
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error.toString()}"));
+          return Center(child: Text("Error: ${snapshot.error.toString()}", style: TextStyle(color: context.textPrimary)));
         }
 
         final qiblahDirection = snapshot.data!;
@@ -120,23 +128,24 @@ class QiblahCompass extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Color(0xFF0F3A26)),
-                    SizedBox(width: 12),
+                    Icon(Icons.info_outline, color: context.primaryAdaptive),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Posisikan ponsel Anda pada permukaan yang datar dan jauhkan dari benda logam/magnetik.',
-                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                        style: TextStyle(fontSize: 13, color: context.textPrimary),
                       ),
                     ),
                   ],
@@ -156,14 +165,14 @@ class QiblahCompass extends StatelessWidget {
                         height: 280,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
+                          color: context.cardColor,
                           border: Border.all(
-                            color: const Color(0xFF0F3A26),
+                            color: isDark ? const Color(0xFF2A6E4F) : const Color(0xFF0F3A26),
                             width: 3,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: isDark ? Colors.black38 : Colors.black.withValues(alpha: 0.06),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -182,33 +191,33 @@ class QiblahCompass extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const Positioned(
+                            Positioned(
                               bottom: 12,
                               child: Text(
                                 'S (180°)',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
+                                  color: context.textSecondary,
                                 ),
                               ),
                             ),
-                            const Positioned(
+                            Positioned(
                               right: 12,
                               child: Text(
                                 'T (90°)',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
+                                  color: context.textSecondary,
                                 ),
                               ),
                             ),
-                            const Positioned(
+                            Positioned(
                               left: 12,
                               child: Text(
                                 'B (270°)',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
+                                  color: context.textSecondary,
                                 ),
                               ),
                             ),
@@ -224,8 +233,8 @@ class QiblahCompass extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF0F3A26),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -251,9 +260,9 @@ class QiblahCompass extends StatelessWidget {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F3A26),
+                        color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(color: isDark ? Colors.black54 : Colors.white, width: 3),
                       ),
                     ),
                   ],
@@ -264,7 +273,7 @@ class QiblahCompass extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F3A26),
+                  color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(

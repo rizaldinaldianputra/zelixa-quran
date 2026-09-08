@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme.dart';
+
 class KalenderHijriahScreen extends StatelessWidget {
   const KalenderHijriahScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
     final now = DateTime.now();
 
     final islamicEvents = [
@@ -28,10 +31,10 @@ class KalenderHijriahScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text('Kalender Hijriah', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -49,6 +52,13 @@ class KalenderHijriahScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F3A26).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -79,32 +89,32 @@ class KalenderHijriahScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFE2B75A).withValues(alpha: 0.4)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                     blurRadius: 8,
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, color: Color(0xFF0F3A26), size: 28),
-                  SizedBox(width: 14),
+                  Icon(Icons.calendar_month_rounded, color: context.primaryAdaptive, size: 28),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Puasa Sunnah Ayyamul Bidh',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F3A26)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: context.primaryAdaptive),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Dianjurkan setiap tanggal 13, 14, dan 15 pada bulan-bulan Hijriah.',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          style: TextStyle(fontSize: 12, color: context.textSecondary),
                         ),
                       ],
                     ),
@@ -115,9 +125,9 @@ class KalenderHijriahScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 12 Hijri Months
-            const Text(
+            Text(
               '12 Bulan Hijriah',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F3A26)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryAdaptive),
             ),
             const SizedBox(height: 10),
             GridView.builder(
@@ -134,11 +144,12 @@ class KalenderHijriahScreen extends StatelessWidget {
                 return Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardColor,
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: context.borderColor),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                         blurRadius: 4,
                       ),
                     ],
@@ -146,7 +157,11 @@ class KalenderHijriahScreen extends StatelessWidget {
                   child: Text(
                     hijriMonths[index],
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
                   ),
                 );
               },
@@ -154,9 +169,9 @@ class KalenderHijriahScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Important Events List
-            const Text(
+            Text(
               'Hari Besar & Peristiwa Penting Islam',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F3A26)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.primaryAdaptive),
             ),
             const SizedBox(height: 10),
             ListView.separated(
@@ -169,11 +184,12 @@ class KalenderHijriahScreen extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.cardColor,
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.borderColor),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                         blurRadius: 6,
                       ),
                     ],
@@ -183,15 +199,15 @@ class KalenderHijriahScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                          color: context.badgeBg,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           ev['hijri']!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F3A26),
+                            color: context.badgeIcon,
                           ),
                         ),
                       ),
@@ -202,12 +218,16 @@ class KalenderHijriahScreen extends StatelessWidget {
                           children: [
                             Text(
                               ev['title']!,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: context.textPrimary,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               ev['desc']!,
-                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              style: TextStyle(fontSize: 11, color: context.textSecondary),
                             ),
                           ],
                         ),

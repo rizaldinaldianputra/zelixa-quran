@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_theme.dart';
 import 'hadits_screen.dart';
 import 'pengaturan_screen.dart';
 import 'tentang_aplikasi_screen.dart';
@@ -25,7 +26,7 @@ class LainnyaTabScreen extends StatelessWidget {
       },
       {
         'title': 'Pengaturan',
-        'subtitle': 'Ukuran teks Arab, terjemahan, dan latin',
+        'subtitle': 'Tema, ukuran teks Arab, terjemahan, dan latin',
         'icon': Icons.settings_rounded,
         'screen': const PengaturanScreen(),
       },
@@ -38,14 +39,17 @@ class LainnyaTabScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Lainnya',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+          ),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
-        foregroundColor: Colors.white,
+        backgroundColor: context.isDark ? AppColors.darkCardSurface : const Color(0xFF0F3A26),
+        foregroundColor: context.isDark ? AppColors.darkTextPrimary : Colors.white,
         elevation: 0,
       ),
       body: ListView.separated(
@@ -65,11 +69,12 @@ class LainnyaTabScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -80,12 +85,14 @@ class LainnyaTabScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      color: context.isDark
+                          ? AppColors.darkCardElevated
+                          : const Color(0xFF0F3A26).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       item['icon'] as IconData,
-                      color: const Color(0xFF0F3A26),
+                      color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                       size: 24,
                     ),
                   ),
@@ -96,10 +103,10 @@ class LainnyaTabScreen extends StatelessWidget {
                       children: [
                         Text(
                           item['title'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -107,13 +114,13 @@ class LainnyaTabScreen extends StatelessWidget {
                           item['subtitle'] as String,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
+                  Icon(Icons.chevron_right, color: context.textSecondary),
                 ],
               ),
             ),

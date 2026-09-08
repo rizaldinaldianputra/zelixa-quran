@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/shalat_model.dart';
+import '../../theme/app_theme.dart';
 import 'gerakan_detail_screen.dart';
 
 class ShalatDetailScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
       SnackBar(
         content: Text('$label berhasil disalin'),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: context.isDark ? AppColors.darkCardElevated : const Color(0xFF0F3A26),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -33,14 +34,18 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
     final hasVariants = shalat.niatMakmumArab != null || shalat.niatImamArab != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: Text(
           shalat.name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+          ),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
-        foregroundColor: Colors.white,
+        backgroundColor: context.isDark ? AppColors.darkCardSurface : const Color(0xFF0F3A26),
+        foregroundColor: context.isDark ? AppColors.darkTextPrimary : Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -87,8 +92,9 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF0F3A26),
+                backgroundColor: context.isDark ? AppColors.darkCardElevated : const Color(0xFF0F3A26),
                 foregroundColor: const Color(0xFFE2B75A),
+                side: context.isDark ? BorderSide(color: context.borderColor) : null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -105,15 +111,18 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
   Widget _buildHeaderCard(ShalatItem shalat) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F3A26), Color(0xFF1B5E3C)],
+        gradient: LinearGradient(
+          colors: context.isDark
+              ? [const Color(0xFF14241D), const Color(0xFF1A3328)]
+              : [const Color(0xFF0F3A26), const Color(0xFF1B5E3C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        border: context.isDark ? Border.all(color: context.borderColor) : null,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F3A26).withValues(alpha: 0.25),
+            color: context.isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF0F3A26).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -240,15 +249,15 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFE2B75A).withValues(alpha: 0.5),
+          color: context.isDark ? context.borderColor : const Color(0xFFE2B75A).withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -260,27 +269,27 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
                   Icon(
                     Icons.favorite_rounded,
-                    color: Color(0xFF0F3A26),
+                    color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                     size: 18,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Lafadz Niat Shalat',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F3A26),
+                      color: context.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F3A26),
                     ),
                   ),
                 ],
               ),
               IconButton(
                 icon: const Icon(Icons.copy_rounded, size: 18),
-                color: Colors.grey[700],
+                color: context.textSecondary,
                 tooltip: 'Salin Niat',
                 onPressed: () => _copyToClipboard(
                   '$currentArab\n\n$currentLatin\n\nArtinya:\n$currentArti',
@@ -295,7 +304,7 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: context.isDark ? AppColors.darkCardElevated : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(3),
@@ -316,11 +325,11 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
           Text(
             currentArab,
             textAlign: TextAlign.right,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               height: 2.1,
-              color: Color(0xFF1E293B),
+              color: context.arabicColor,
             ),
           ),
           const SizedBox(height: 14),
@@ -328,15 +337,15 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
           // Latin
           Text(
             currentLatin,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontStyle: FontStyle.italic,
               height: 1.5,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF0F3A26),
+              color: context.latinColor,
             ),
           ),
-          const Divider(height: 24),
+          Divider(height: 24, color: context.borderColor),
 
           // Arti
           Text(
@@ -344,7 +353,7 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
             style: TextStyle(
               fontSize: 13,
               height: 1.5,
-              color: Colors.grey[800],
+              color: context.textSecondary,
             ),
           ),
         ],
@@ -364,7 +373,9 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF0F3A26) : Colors.transparent,
+            color: isSelected
+                ? (context.isDark ? AppColors.primaryLight : const Color(0xFF0F3A26))
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           alignment: Alignment.center,
@@ -373,7 +384,9 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.grey[700],
+              color: isSelected
+                  ? (context.isDark ? Colors.black : Colors.white)
+                  : context.textSecondary,
             ),
           ),
         ),
@@ -385,29 +398,29 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F8F5),
+        color: context.isDark ? AppColors.darkCardElevated : const Color(0xFFF1F8F5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF0F3A26).withValues(alpha: 0.15),
+          color: context.isDark ? context.borderColor : const Color(0xFF0F3A26).withValues(alpha: 0.15),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.stars_rounded,
                 color: Color(0xFFE2B75A),
                 size: 20,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'Keutamaan & Dalil',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
+                  color: context.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F3A26),
                 ),
               ),
             ],
@@ -415,10 +428,10 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
           const SizedBox(height: 10),
           Text(
             shalat.keutamaan,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               height: 1.6,
-              color: Color(0xFF334155),
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -430,11 +443,12 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -443,20 +457,20 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.format_list_numbered_rounded,
-                color: Color(0xFF0F3A26),
+                color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                 size: 20,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'Tata Cara Pelaksanaan',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A26),
+                  color: context.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F3A26),
                 ),
               ),
             ],
@@ -474,16 +488,16 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      color: context.isDark ? AppColors.darkCardElevated : const Color(0xFF0F3A26).withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       '${idx + 1}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F3A26),
+                        color: context.isDark ? AppColors.emeraldLight : const Color(0xFF0F3A26),
                       ),
                     ),
                   ),
@@ -491,10 +505,10 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
                   Expanded(
                     child: Text(
                       step,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         height: 1.5,
-                        color: Color(0xFF1E293B),
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -511,15 +525,15 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE2B75A).withValues(alpha: 0.4),
+          color: context.isDark ? context.borderColor : const Color(0xFFE2B75A).withValues(alpha: 0.4),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -533,25 +547,25 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.volunteer_activism_rounded,
-                    color: Color(0xFF0F3A26),
+                    color: context.isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Doa Khusus ${shalat.name}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F3A26),
+                      color: context.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F3A26),
                     ),
                   ),
                 ],
               ),
               IconButton(
                 icon: const Icon(Icons.copy_rounded, size: 18),
-                color: Colors.grey[700],
+                color: context.textSecondary,
                 tooltip: 'Salin Doa',
                 onPressed: () => _copyToClipboard(
                   '${shalat.doaKhususArab}\n\n${shalat.doaKhususLatin}\n\nArtinya:\n${shalat.doaKhususArti}',
@@ -564,34 +578,34 @@ class _ShalatDetailScreenState extends State<ShalatDetailScreen> {
           Text(
             shalat.doaKhususArab ?? '',
             textAlign: TextAlign.right,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               height: 2.1,
-              color: Color(0xFF1E293B),
+              color: context.arabicColor,
             ),
           ),
           if (shalat.doaKhususLatin != null) ...[
             const SizedBox(height: 14),
             Text(
               shalat.doaKhususLatin!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
                 height: 1.5,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0F3A26),
+                color: context.latinColor,
               ),
             ),
           ],
           if (shalat.doaKhususArti != null) ...[
-            const Divider(height: 24),
+            Divider(height: 24, color: context.borderColor),
             Text(
               'Artinya:\n${shalat.doaKhususArti}',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.5,
-                color: Colors.grey[800],
+                color: context.textSecondary,
               ),
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/logo.dart';
+import '../theme/app_theme.dart';
 import 'main_navigation_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -63,8 +64,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final primaryThemeColor = isDark ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26);
+    final buttonTextColor = isDark ? const Color(0xFF0F3A26) : Colors.white;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -85,9 +90,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (index == 0) ...[
-                          const ZelixaLogo(
-                            textColor: Color(0xFF0F3A26),
-                            subtitleColor: Colors.black54,
+                          ZelixaLogo(
+                            textColor: context.textPrimary,
+                            subtitleColor: context.textSecondary,
+                            primaryColor: const Color(0xFFE2B75A),
                           ),
                           const SizedBox(height: 48),
                         ] else ...[
@@ -101,25 +107,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: Icon(
                               page.icon,
                               size: 100,
-                              color: const Color(0xFF0F3A26),
+                              color: primaryThemeColor,
                             ),
                           ),
                           const SizedBox(height: 48),
                           Text(
                             page.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F3A26),
+                              color: context.textPrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             page.description,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
-                              color: Colors.black54,
+                              color: context.textSecondary,
                               height: 1.5,
                             ),
                             textAlign: TextAlign.center,
@@ -146,8 +152,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? const Color(0xFF0F3A26)
-                              : const Color(0xFF0F3A26).withValues(alpha: 0.2),
+                              ? primaryThemeColor
+                              : primaryThemeColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -157,8 +163,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F3A26),
-                      foregroundColor: Colors.white,
+                      backgroundColor: primaryThemeColor,
+                      foregroundColor: buttonTextColor,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,

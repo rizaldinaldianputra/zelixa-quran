@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/hadits_data.dart';
+import '../../theme/app_theme.dart';
 
 class HaditsScreen extends StatelessWidget {
   const HaditsScreen({super.key});
@@ -9,11 +10,18 @@ class HaditsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
-        title: const Text('Hadits Pilihan', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF0F3A26),
-        foregroundColor: Colors.white,
+        title: Text(
+          'Hadits Pilihan',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+          ),
+        ),
+        backgroundColor: context.isDark ? AppColors.darkCardSurface : const Color(0xFF0F3A26),
+        foregroundColor: context.isDark ? AppColors.darkTextPrimary : Colors.white,
+        elevation: 0,
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -24,11 +32,12 @@ class HaditsScreen extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
                   blurRadius: 8,
                 ),
               ],
@@ -42,41 +51,47 @@ class HaditsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F3A26),
+                        color: context.isDark
+                            ? AppColors.darkCardElevated
+                            : const Color(0xFF0F3A26),
                         borderRadius: BorderRadius.circular(8),
+                        border: context.isDark ? Border.all(color: context.borderColor) : null,
                       ),
                       child: Text(
                         'Hadits #${h.number}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.isDark ? const Color(0xFFE2B75A) : Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.copy, size: 18, color: Colors.grey),
+                      icon: Icon(Icons.copy_rounded, size: 18, color: context.textSecondary),
+                      tooltip: 'Salin Hadits',
                       onPressed: () {
                         Clipboard.setData(ClipboardData(
                           text: '${h.title}\n\n${h.arabic}\n\nArtinya: ${h.translation}\n(${h.narrator})',
                         ));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Hadits disalin ke papan klip'),
-                            duration: Duration(seconds: 1),
+                          SnackBar(
+                            content: const Text('Hadits disalin ke papan klip'),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: context.isDark ? AppColors.darkCardElevated : const Color(0xFF0F3A26),
+                            duration: const Duration(seconds: 1),
                           ),
                         );
                       },
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   h.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -84,11 +99,11 @@ class HaditsScreen extends StatelessWidget {
                   h.arabic,
                   textAlign: TextAlign.right,
                   textDirection: TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
                     height: 1.8,
-                    color: Color(0xFF0F3A26),
+                    color: context.arabicColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -96,17 +111,18 @@ class HaditsScreen extends StatelessWidget {
                   h.translation,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[800],
+                    color: context.textSecondary,
                     height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   h.narrator,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
-                    color: Color(0xFF059669),
+                    color: context.latinColor,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

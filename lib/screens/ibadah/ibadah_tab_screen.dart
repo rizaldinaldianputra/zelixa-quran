@@ -6,12 +6,15 @@ import 'kalender_hijriah_screen.dart';
 import 'tasbih_screen.dart';
 import '../shalat/panduan_shalat_screen.dart';
 import '../zakat/kalkulator_zakat_screen.dart';
+import '../../theme/app_theme.dart';
 
 class IbadahTabScreen extends StatelessWidget {
   const IbadahTabScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     final modules = [
       {
         'title': 'Kalkulator Zakat',
@@ -52,13 +55,13 @@ class IbadahTabScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Ibadah',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -79,11 +82,12 @@ class IbadahTabScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -94,12 +98,12 @@ class IbadahTabScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      color: context.badgeBg,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       mod['icon'] as IconData,
-                      color: const Color(0xFF0F3A26),
+                      color: context.badgeIcon,
                       size: 28,
                     ),
                   ),
@@ -110,10 +114,10 @@ class IbadahTabScreen extends StatelessWidget {
                       children: [
                         Text(
                           mod['title'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -121,15 +125,15 @@ class IbadahTabScreen extends StatelessWidget {
                           mod['subtitle'] as String,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[600],
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: Colors.grey,
+                    color: context.textSecondary,
                   ),
                 ],
               ),

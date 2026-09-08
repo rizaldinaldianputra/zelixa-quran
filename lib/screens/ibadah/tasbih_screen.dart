@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/app_theme.dart';
+
 class TasbihScreen extends StatefulWidget {
   const TasbihScreen({super.key});
 
@@ -31,7 +33,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Target $_target kali telah tercapai! Alhamdulillah.'),
-            backgroundColor: const Color(0xFF0F3A26),
+            backgroundColor: context.isDark ? AppColors.cardDarkSecondary : const Color(0xFF0F3A26),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -47,13 +49,14 @@ class _TasbihScreenState extends State<TasbihScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
     final progress = _target > 0 ? (_counter / _target).clamp(0.0, 1.0) : 0.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         title: const Text('Tasbih Digital', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF0F3A26),
+        backgroundColor: isDark ? AppColors.appBarDark : AppColors.primaryLight,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
@@ -68,11 +71,13 @@ class _TasbihScreenState extends State<TasbihScreen> {
                   DropdownButton<int>(
                     value: _target,
                     underline: const SizedBox(),
-                    items: const [
-                      DropdownMenuItem(value: 33, child: Text('Target: 33x')),
-                      DropdownMenuItem(value: 99, child: Text('Target: 99x')),
-                      DropdownMenuItem(value: 100, child: Text('Target: 100x')),
-                      DropdownMenuItem(value: 1000, child: Text('Target: 1000x')),
+                    dropdownColor: context.cardColor,
+                    style: TextStyle(color: context.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                    items: [
+                      DropdownMenuItem(value: 33, child: Text('Target: 33x', style: TextStyle(color: context.textPrimary))),
+                      DropdownMenuItem(value: 99, child: Text('Target: 99x', style: TextStyle(color: context.textPrimary))),
+                      DropdownMenuItem(value: 100, child: Text('Target: 100x', style: TextStyle(color: context.textPrimary))),
+                      DropdownMenuItem(value: 1000, child: Text('Target: 1000x', style: TextStyle(color: context.textPrimary))),
                     ],
                     onChanged: (val) {
                       if (val != null) setState(() => _target = val);
@@ -93,11 +98,12 @@ class _TasbihScreenState extends State<TasbihScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.cardColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                     ),
                   ],
@@ -105,6 +111,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int>(
                     isExpanded: true,
+                    dropdownColor: context.cardColor,
                     value: _selectedDzikirIndex,
                     items: List.generate(
                       _dzikirOptions.length,
@@ -112,10 +119,10 @@ class _TasbihScreenState extends State<TasbihScreen> {
                         value: i,
                         child: Text(
                           _dzikirOptions[i],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F3A26),
+                            color: context.textPrimary,
                           ),
                         ),
                       ),
@@ -144,7 +151,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
                     child: CircularProgressIndicator(
                       value: progress,
                       strokeWidth: 10,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: isDark ? context.borderColor : Colors.grey.shade200,
                       valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE2B75A)),
                     ),
                   ),
@@ -190,9 +197,9 @@ class _TasbihScreenState extends State<TasbihScreen> {
               ),
 
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Ketuk lingkaran untuk menghitung',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(color: context.textSecondary, fontSize: 13),
               ),
 
               const Spacer(),

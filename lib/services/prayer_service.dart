@@ -84,6 +84,11 @@ class PrayerService {
     await prefs.setInt(_keyCityIndex, index);
   }
 
+  static Future<PrayerSchedule> getTodaySchedule() async {
+    final city = await getSelectedCity();
+    return calculatePrayers(city, DateTime.now());
+  }
+
   static PrayerSchedule calculatePrayers(CityLocation city, [DateTime? targetDate]) {
     final date = targetDate ?? DateTime.now();
     final lat = city.latitude;
