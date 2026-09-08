@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'notification_service.dart';
+import 'preferences_service.dart';
 
 class CityLocation {
   final String name;
@@ -198,4 +200,81 @@ class PrayerService {
 
   static double _degToRad(double deg) => deg * (math.pi / 180.0);
   static double _radToDeg(double rad) => rad * (180.0 / math.pi);
+
+  static Future<void> scheduleAllNotifications() async {
+    final ns = NotificationService();
+    final prefs = PreferencesService();
+    await ns.cancelAllNotifications();
+    
+    if (!prefs.isNotificationEnabled) return;
+    
+    final c = await getSelectedCity();
+    
+    for (int i = 0; i < 7; i++) {
+      final date = DateTime.now().add(Duration(days: i));
+      final s = calculatePrayers(c, date);
+      int baseId = i * 10;
+      
+      if (prefs.isPrayerNotificationEnabled('Imsak')) {
+        ns.schedulePrayerNotification(
+          baseId + 0,
+          'Imsak',
+          s.imsak,
+          useAdzanSound: false,
+          customBody: 'Waktu Imsak telah tiba. Bersiaplah untuk menunaikan ibadah puasa dan shalat Subuh.',
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Subuh')) {
+        ns.schedulePrayerNotification(
+          baseId + 1,
+          'Subuh',
+          s.subuh,
+          useAdzanSound: prefs.useAdzanSound,
+          customBody: 'Telah masuk waktu shalat Subuh. Ash-shalatu khairum minan naum.',
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Dhuha')) {
+        final dhuha = s.terbit.add(const Duration(minutes: 20));
+        ns.schedulePrayerNotification(
+          baseId + 6,
+          'Dhuha',
+          dhuha,
+          useAdzanSound: false,
+          customBody: 'Waktu shalat Dhuha telah tiba. Mari dirikan shalat Dhuha.',
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Dzuhur')) {
+        ns.schedulePrayerNotification(
+          baseId + 2,
+          'Dzuhur',
+          s.dzuhur,
+          useAdzanSound: prefs.useAdzanSound,
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Ashar')) {
+        ns.schedulePrayerNotification(
+          baseId + 3,
+          'Ashar',
+          s.ashar,
+          useAdzanSound: prefs.useAdzanSound,
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Maghrib')) {
+        ns.schedulePrayerNotification(
+          baseId + 4,
+          'Maghrib',
+          s.maghrib,
+          useAdzanSound: prefs.useAdzanSound,
+        );
+      }
+      if (prefs.isPrayerNotificationEnabled('Isya')) {
+        ns.schedulePrayerNotification(
+          baseId + 5,
+          'Isya',
+          s.isya,
+          useAdzanSound: prefs.useAdzanSound,
+        );
+      }
+    }
+  }
 }

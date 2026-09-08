@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../services/prayer_service.dart';
+import '../../services/notification_service.dart';
+import '../../services/preferences_service.dart';
 
 class JadwalShalatScreen extends StatefulWidget {
   const JadwalShalatScreen({super.key});
@@ -20,12 +22,26 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
   @override
   void initState() {
     super.initState();
+    PreferencesService().addListener(_onPrefsChanged);
+    _initNotifications();
     _loadSchedule();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
+  void _onPrefsChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _initNotifications() async {
+    await NotificationService().requestPermissions();
+    await PrayerService.scheduleAllNotifications();
+  }
+
   @override
   void dispose() {
+    PreferencesService().removeListener(_onPrefsChanged);
     _timer?.cancel();
     super.dispose();
   }
@@ -61,6 +77,117 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
     return '$hours:$minutes:$seconds';
   }
 
+  Future<void> _togglePrayer(String prayerName) async {
+    final prefs = PreferencesService();
+    final currentlyOn = prefs.isPrayerNotificationEnabled(prayerName);
+    final nextVal = !currentlyOn;
+
+    await prefs.setPrayerNotificationEnabled(prayerName, nextVal);
+    await PrayerService.scheduleAllNotifications();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF0F3A26),
+          duration: const Duration(seconds: 2),
+          content: Row(
+            children: [
+              Icon(
+                nextVal ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                color: nextVal ? const Color(0xFFE2B75A) : Colors.white70,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  nextVal
+                      ? 'Pengingat $prayerName diaktifkan (${prefs.useAdzanSound ? "Suara Adzan" : "Nada Bawaan"})'
+                      : 'Pengingat $prayerName dimatikan',
+                  style: const TextStyle(fontSize: 13, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleAllPrayers(bool enable) async {
+    final prefs = PreferencesService();
+    await prefs.setAllPrayerNotifications(enable);
+    await PrayerService.scheduleAllNotifications();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF0F3A26),
+          duration: const Duration(seconds: 2),
+          content: Row(
+            children: [
+              Icon(
+                enable ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                color: enable ? const Color(0xFFE2B75A) : Colors.white70,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  enable
+                      ? 'Semua pengingat shalat dinyalakan'
+                      : 'Semua pengingat shalat dimatikan',
+                  style: const TextStyle(fontSize: 13, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleSoundType() async {
+    final prefs = PreferencesService();
+    final nextVal = !prefs.useAdzanSound;
+    await prefs.setUseAdzanSound(nextVal);
+    await NotificationService().recreateChannels();
+    await PrayerService.scheduleAllNotifications();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF0F3A26),
+          duration: const Duration(seconds: 2),
+          content: Row(
+            children: [
+              Icon(
+                nextVal ? Icons.volume_up_rounded : Icons.music_note_rounded,
+                color: const Color(0xFFE2B75A),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  nextVal ? 'Nada dering diubah ke Suara Adzan' : 'Nada dering diubah ke Nada Bawaan',
+                  style: const TextStyle(fontSize: 13, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_schedule == null) {
@@ -69,17 +196,18 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
       );
     }
 
+    final prefs = PreferencesService();
     final dhuha = _schedule!.terbit.add(const Duration(minutes: 20));
 
     final items = [
-      {'name': 'Imsak', 'time': _schedule!.imsak, 'icon': Icons.nightlight_round},
-      {'name': 'Subuh', 'time': _schedule!.subuh, 'icon': Icons.wb_twilight},
-      {'name': 'Terbit', 'time': _schedule!.terbit, 'icon': Icons.wb_sunny_outlined},
-      {'name': 'Dhuha', 'time': dhuha, 'icon': Icons.wb_sunny},
-      {'name': 'Dzuhur', 'time': _schedule!.dzuhur, 'icon': Icons.sunny},
-      {'name': 'Ashar', 'time': _schedule!.ashar, 'icon': Icons.wb_twilight},
-      {'name': 'Maghrib', 'time': _schedule!.maghrib, 'icon': Icons.bedtime_outlined},
-      {'name': 'Isya', 'time': _schedule!.isya, 'icon': Icons.bedtime},
+      {'name': 'Imsak', 'time': _schedule!.imsak, 'icon': Icons.nightlight_round, 'canNotify': true},
+      {'name': 'Subuh', 'time': _schedule!.subuh, 'icon': Icons.wb_twilight, 'canNotify': true},
+      {'name': 'Terbit', 'time': _schedule!.terbit, 'icon': Icons.wb_sunny_outlined, 'canNotify': false},
+      {'name': 'Dhuha', 'time': dhuha, 'icon': Icons.wb_sunny, 'canNotify': true},
+      {'name': 'Dzuhur', 'time': _schedule!.dzuhur, 'icon': Icons.sunny, 'canNotify': true},
+      {'name': 'Ashar', 'time': _schedule!.ashar, 'icon': Icons.wb_twilight, 'canNotify': true},
+      {'name': 'Maghrib', 'time': _schedule!.maghrib, 'icon': Icons.bedtime_outlined, 'canNotify': true},
+      {'name': 'Isya', 'time': _schedule!.isya, 'icon': Icons.bedtime, 'canNotify': true},
     ];
 
     return Scaffold(
@@ -93,6 +221,68 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
             icon: const Icon(Icons.location_on_outlined),
             tooltip: 'Ganti Kota',
             onPressed: _pickCity,
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'Menu Notifikasi',
+            onSelected: (val) async {
+              if (val == 'all_on') {
+                await _toggleAllPrayers(true);
+              } else if (val == 'all_off') {
+                await _toggleAllPrayers(false);
+              } else if (val == 'toggle_sound') {
+                await _toggleSoundType();
+              } else if (val == 'test_notif') {
+                await NotificationService().showTestNotification(useAdzanSound: prefs.useAdzanSound);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'all_on',
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_active, color: Color(0xFF0F3A26), size: 20),
+                    SizedBox(width: 10),
+                    Text('Nyalakan Semua Notifikasi'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'all_off',
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_off_outlined, color: Colors.grey, size: 20),
+                    SizedBox(width: 10),
+                    Text('Matikan Semua Notifikasi'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'toggle_sound',
+                child: Row(
+                  children: [
+                    Icon(
+                      prefs.useAdzanSound ? Icons.volume_up : Icons.music_note,
+                      color: const Color(0xFF0F3A26),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(prefs.useAdzanSound ? 'Ganti ke Nada Bawaan' : 'Ganti ke Suara Adzan'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'test_notif',
+                child: Row(
+                  children: [
+                    Icon(Icons.play_circle_outline, color: Color(0xFFE2B75A), size: 20),
+                    SizedBox(width: 10),
+                    Text('Uji Coba Bunyi Notifikasi'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -158,7 +348,7 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Date navigation row
             Row(
@@ -188,7 +378,94 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
+
+            // Notification Quick Settings Banner
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      prefs.useAdzanSound ? Icons.volume_up_rounded : Icons.notifications_active_rounded,
+                      color: const Color(0xFF0F3A26),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pengingat Adzan & Shalat',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1E293B)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Ketuk ikon lonceng untuk atur tiap waktu shalat',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _toggleSoundType,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: prefs.useAdzanSound
+                            ? const Color(0xFFFEF3C7)
+                            : const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: prefs.useAdzanSound
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            prefs.useAdzanSound ? Icons.record_voice_over_rounded : Icons.music_note_rounded,
+                            size: 13,
+                            color: prefs.useAdzanSound ? const Color(0xFFD97706) : Colors.grey.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            prefs.useAdzanSound ? 'Adzan' : 'Bawaan',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: prefs.useAdzanSound ? const Color(0xFFD97706) : Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Prayer Time Items List
             ListView.separated(
@@ -198,37 +475,80 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final item = items[index];
-                final isNext = _nextPrayer != null && _nextPrayer!.name == item['name'];
+                final name = item['name'] as String;
+                final canNotify = item['canNotify'] as bool;
+                final isNext = _nextPrayer != null && _nextPrayer!.name == name;
                 final dt = item['time'] as DateTime;
+                final isNotifActive = canNotify && prefs.isPrayerNotificationEnabled(name);
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: isNext ? const Color(0xFF0F3A26) : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isNext
+                          ? const Color(0xFF0F3A26)
+                          : (isNotifActive ? const Color(0xFFF59E0B).withValues(alpha: 0.2) : Colors.transparent),
+                      width: 1,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: isNext
+                            ? const Color(0xFF0F3A26).withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.02),
                         blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        item['icon'] as IconData,
-                        color: isNext ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        item['name'] as String,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: isNext ? Colors.white : const Color(0xFF1E293B),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isNext
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          item['icon'] as IconData,
+                          size: 20,
+                          color: isNext ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: isNext ? Colors.white : const Color(0xFF1E293B),
+                              ),
+                            ),
+                            if (canNotify) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                isNotifActive
+                                    ? (prefs.useAdzanSound ? 'Pengingat Adzan Aktif' : 'Pengingat Aktif')
+                                    : 'Pengingat Dimatikan',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isNotifActive ? FontWeight.w600 : FontWeight.normal,
+                                  color: isNext
+                                      ? (isNotifActive ? const Color(0xFFE2B75A) : Colors.white54)
+                                      : (isNotifActive ? const Color(0xFFD97706) : Colors.grey.shade400),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                       Text(
                         _format(dt),
                         style: TextStyle(
@@ -237,6 +557,60 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
                           color: isNext ? const Color(0xFFE2B75A) : const Color(0xFF0F3A26),
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      if (canNotify)
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _togglePrayer(name),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isNotifActive
+                                    ? (isNext
+                                        ? const Color(0xFFE2B75A).withValues(alpha: 0.25)
+                                        : const Color(0xFFFEF3C7))
+                                    : (isNext
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : const Color(0xFFF1F5F9)),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isNotifActive
+                                      ? (isNext
+                                          ? const Color(0xFFE2B75A).withValues(alpha: 0.6)
+                                          : const Color(0xFFF59E0B).withValues(alpha: 0.4))
+                                      : (isNext
+                                          ? Colors.white.withValues(alpha: 0.1)
+                                          : Colors.transparent),
+                                  width: 1.2,
+                                ),
+                                boxShadow: isNotifActive
+                                    ? [
+                                        BoxShadow(
+                                          color: (isNext ? const Color(0xFFE2B75A) : const Color(0xFFF59E0B))
+                                              .withValues(alpha: 0.25),
+                                          blurRadius: 6,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Icon(
+                                isNotifActive
+                                    ? Icons.notifications_active_rounded
+                                    : Icons.notifications_off_outlined,
+                                size: 20,
+                                color: isNotifActive
+                                    ? (isNext ? const Color(0xFFE2B75A) : const Color(0xFFD97706))
+                                    : (isNext ? Colors.white38 : Colors.grey.shade400),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 36),
                     ],
                   ),
                 );
@@ -301,3 +675,4 @@ class _JadwalShalatScreenState extends State<JadwalShalatScreen> {
     return months[m - 1];
   }
 }
+

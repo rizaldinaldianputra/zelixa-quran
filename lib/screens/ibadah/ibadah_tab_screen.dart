@@ -4,6 +4,7 @@ import 'jadwal_shalat_screen.dart';
 import 'kiblat_screen.dart';
 import 'kalender_hijriah_screen.dart';
 import 'tasbih_screen.dart';
+import '../shalat/panduan_shalat_screen.dart';
 
 class IbadahTabScreen extends StatelessWidget {
   const IbadahTabScreen({super.key});
@@ -11,6 +12,12 @@ class IbadahTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final modules = [
+      {
+        'title': 'Panduan Shalat Lengkap',
+        'subtitle': 'Tata cara, bacaan, gerakan & semua jenis shalat',
+        'icon': Icons.accessibility_new_rounded,
+        'screen': const PanduanShalatScreen(),
+      },
       {
         'title': 'Jadwal Shalat',
         'subtitle': 'Waktu shalat harian & hitung mundur',

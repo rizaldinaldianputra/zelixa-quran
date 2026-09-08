@@ -1,5 +1,8 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_qiblah/flutter_qiblah.dart';
+import 'package:geolocator/geolocator.dart';
 
 class KiblatScreen extends StatefulWidget {
   const KiblatScreen({super.key});
@@ -9,20 +12,108 @@ class KiblatScreen extends StatefulWidget {
 }
 
 class _KiblatScreenState extends State<KiblatScreen> {
-  // Qibla direction from Indonesia is approximately 295 degrees (West-Northwest)
-  final double _qiblaAngleDegrees = 295.0;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Arah Kiblat', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Arah Kiblat',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF0F3A26),
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: Padding(
+        child: FutureBuilder(
+          future: FlutterQiblah.checkLocationStatus(),
+          builder: (context, AsyncSnapshot<LocationStatus> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error.toString()}'));
+            }
+
+            if (snapshot.data!.enabled &&
+                (snapshot.data!.status == LocationPermission.always ||
+                    snapshot.data!.status == LocationPermission.whileInUse)) {
+              return const QiblahCompass();
+            } else {
+              return const LocationErrorWidget();
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class LocationErrorWidget extends StatelessWidget {
+  const LocationErrorWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.location_off, size: 100, color: Colors.red),
+          const SizedBox(height: 16),
+          const Text(
+            'Layanan Lokasi Tidak Aktif',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.0),
+            child: Text(
+              'Aplikasi membutuhkan akses lokasi untuk menentukan arah kiblat yang akurat.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F3A26),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              FlutterQiblah.requestPermissions();
+            },
+            child: const Text('Izinkan Lokasi'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class QiblahCompass extends StatelessWidget {
+  const QiblahCompass({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: FlutterQiblah.qiblahStream,
+      builder: (context, AsyncSnapshot<QiblahDirection> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF0F3A26)),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error.toString()}"));
+        }
+
+        final qiblahDirection = snapshot.data!;
+
+        return Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
@@ -51,61 +142,86 @@ class _KiblatScreenState extends State<KiblatScreen> {
                   ],
                 ),
               ),
-
               const Spacer(),
-
               // Compass Dial
               Center(
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Outer Compass Ring
-                    Container(
-                      width: 280,
-                      height: 280,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(color: const Color(0xFF0F3A26), width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+                    // Outer Compass Ring pointing North
+                    Transform.rotate(
+                      angle: (qiblahDirection.direction * (math.pi / 180) * -1),
+                      child: Container(
+                        width: 280,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          border: Border.all(
+                            color: const Color(0xFF0F3A26),
+                            width: 3,
                           ),
-                        ],
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Cardinal Directions
-                          const Positioned(
-                            top: 12,
-                            child: Text('U (0°)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-                          ),
-                          const Positioned(
-                            bottom: 12,
-                            child: Text('S (180°)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                          ),
-                          const Positioned(
-                            right: 12,
-                            child: Text('T (90°)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                          ),
-                          const Positioned(
-                            left: 12,
-                            child: Text('B (270°)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                          ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Positioned(
+                              top: 12,
+                              child: Text(
+                                'U (0°)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                            const Positioned(
+                              bottom: 12,
+                              child: Text(
+                                'S (180°)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const Positioned(
+                              right: 12,
+                              child: Text(
+                                'T (90°)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const Positioned(
+                              left: 12,
+                              child: Text(
+                                'B (270°)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-
-                    // Rotating Qibla Needle Pointing to 295°
+                    // Rotating Qibla Needle
                     Transform.rotate(
-                      angle: _qiblaAngleDegrees * (math.pi / 180.0),
+                      angle: (qiblahDirection.qiblah * (math.pi / 180)),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Ka'bah pointer icon at top of needle
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
@@ -130,7 +246,6 @@ class _KiblatScreenState extends State<KiblatScreen> {
                         ],
                       ),
                     ),
-
                     // Center Pivot
                     Container(
                       width: 20,
@@ -144,9 +259,7 @@ class _KiblatScreenState extends State<KiblatScreen> {
                   ],
                 ),
               ),
-
               const Spacer(),
-
               // Qibla Info Card
               Container(
                 padding: const EdgeInsets.all(16),
@@ -165,7 +278,7 @@ class _KiblatScreenState extends State<KiblatScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${_qiblaAngleDegrees.toInt()}° BBL',
+                          '${qiblahDirection.offset.toStringAsFixed(1)}°',
                           style: const TextStyle(
                             color: Color(0xFFE2B75A),
                             fontSize: 18,
@@ -175,16 +288,16 @@ class _KiblatScreenState extends State<KiblatScreen> {
                       ],
                     ),
                     Container(width: 1, height: 32, color: Colors.white24),
-                    const Column(
+                    Column(
                       children: [
-                        Text(
-                          'Jarak ke Ka\'bah',
+                        const Text(
+                          'Arah Utara',
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
-                          '± 7.920 km',
-                          style: TextStyle(
+                          '${qiblahDirection.direction.toStringAsFixed(1)}°',
+                          style: const TextStyle(
                             color: Color(0xFFE2B75A),
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -197,8 +310,8 @@ class _KiblatScreenState extends State<KiblatScreen> {
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

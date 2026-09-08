@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:feature_discovery/feature_discovery.dart';
 import 'screens/splash_screen.dart';
+import 'services/notification_service.dart';
+import 'services/preferences_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await PreferencesService().init();
+  await NotificationService().init();
   runApp(
     const ProviderScope(
       child: MyApp(),

@@ -109,7 +109,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4),
               ],
             ),
             child: TextField(
@@ -136,7 +136,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final cat = categories[index];
               final isSelected = cat == _selectedCategory;
@@ -179,7 +179,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 14),
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
                     final doa = filtered[index];
                     return Container(
@@ -189,7 +189,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withValues(alpha: 0.03),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -208,7 +208,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF0F3A26)
-                                      .withOpacity(0.08),
+                                      .withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -324,7 +324,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),
             ],
           ),
           child: Row(
@@ -362,7 +362,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: list.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 14),
+            separatorBuilder: (_, _) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final item = list[index];
               final currentCount = _dzikirCounters[item.id] ?? 0;
@@ -378,7 +378,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                       : null,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                     ),
                   ],
@@ -405,7 +405,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                           decoration: BoxDecoration(
                             color: isComplete
                                 ? const Color(0xFF059669)
-                                : const Color(0xFF0F3A26).withOpacity(0.1),
+                                : const Color(0xFF0F3A26).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -541,7 +541,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -553,7 +553,7 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2B75A).withOpacity(0.15),
+                  color: const Color(0xFFE2B75A).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(

@@ -34,11 +34,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       // Small delay for pleasant branding transition
       await Future.delayed(const Duration(milliseconds: 1000));
+      final prefs = await SharedPreferences.getInstance();
+      final isFirstInstall = prefs.getBool('is_first_install') ?? true;
 
       if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
-        final isFirstInstall = prefs.getBool('is_first_install') ?? true;
-
         if (isFirstInstall) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const OnboardingScreen()),
