@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../services/database_helper.dart';
 import 'main_navigation_screen.dart';
 import 'onboarding_screen.dart';
@@ -54,9 +55,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           _isLoading = false;
           _status = 'Gagal memuat data: $e';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -85,7 +85,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Zelixa Quran',
+                'Zelixa Islamic',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
@@ -96,10 +96,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               const SizedBox(height: 6),
               const Text(
                 'Al-Qur\'an Digital & Sahabat Ibadah',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 48),
               if (_isLoading) ...[
@@ -108,7 +105,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   height: 32,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE2B75A)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFE2B75A),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

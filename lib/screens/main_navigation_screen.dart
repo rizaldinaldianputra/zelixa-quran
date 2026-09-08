@@ -7,6 +7,8 @@ import 'doa/doa_tab_screen.dart';
 import 'ibadah/ibadah_tab_screen.dart';
 import 'lainnya/lainnya_tab_screen.dart';
 
+import '../services/preferences_service.dart';
+
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -21,13 +23,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FeatureDiscovery.discoverFeatures(
-        context,
-        <String>{
-          'feature_quran_tab',
-          'feature_ibadah_tab',
-        },
-      );
+      final prefs = PreferencesService();
+      if (prefs.isFirstTimeFeatureDiscovery) {
+        FeatureDiscovery.discoverFeatures(
+          context,
+          <String>{
+            'feature_quran_tab',
+            'feature_ibadah_tab',
+          },
+        );
+        prefs.setFeatureDiscoveryShown();
+      }
     });
   }
 

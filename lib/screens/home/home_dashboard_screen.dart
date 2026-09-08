@@ -8,6 +8,7 @@ import '../../services/bookmark_service.dart';
 import '../../data/doa_data.dart';
 import '../surah_detail_screen.dart';
 import '../shalat/panduan_shalat_screen.dart';
+import '../zakat/kalkulator_zakat_screen.dart';
 
 class HomeDashboardScreen extends ConsumerStatefulWidget {
   final Function(int) onNavigateTab;
@@ -102,7 +103,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             ),
             const SizedBox(width: 10),
             const Text(
-              'Zelixa Quran',
+              'Zelixa Islamic',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -147,6 +148,10 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
 
               // Banner Panduan Shalat Lengkap
               _buildPanduanShalatBanner(),
+              const SizedBox(height: 12),
+
+              // Banner Kalkulator Zakat
+              _buildKalkulatorZakatBanner(),
               const SizedBox(height: 16),
 
               // Card Ayat / Doa Pilihan
@@ -498,9 +503,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => const PanduanShalatScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const PanduanShalatScreen()),
         );
       },
       borderRadius: BorderRadius.circular(16),
@@ -554,10 +557,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                   SizedBox(height: 3),
                   Text(
                     'Tata cara, bacaan & gerakan visual shalat',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -565,6 +565,77 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             const Icon(
               Icons.arrow_forward_ios_rounded,
               color: Color(0xFFE2B75A),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKalkulatorZakatBanner() {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const KalkulatorZakatScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF0F3A26).withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F3A26).withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.calculate_rounded,
+                color: Color(0xFF0F3A26),
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kalkulator Zakat',
+                    style: TextStyle(
+                      color: Color(0xFF1E293B),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'Hitung Zakat Fitrah, Penghasilan & Maal otomatis',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.grey,
               size: 16,
             ),
           ],

@@ -8,7 +8,10 @@ class TentangAplikasiScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Tentang Aplikasi', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Tentang Aplikasi',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF0F3A26),
         foregroundColor: Colors.white,
       ),
@@ -39,7 +42,7 @@ class TentangAplikasiScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Zelixa Quran',
+              'Zelixa Islamic',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -67,9 +70,13 @@ class TentangAplikasiScreen extends StatelessWidget {
                 ],
               ),
               child: const Text(
-                'Zelixa Quran adalah aplikasi Al-Qur\'an digital modern, cepat, dan mudah digunakan yang dirancang untuk menemani ibadah harian kaum muslimin. Dilengkapi dengan Al-Qur\'an lengkap 30 juz, transliterasi Latin, terjemahan resmi Kemenag RI, audio tilawah per ayat, doa harian, dzikir, jadwal shalat akurat, kompas arah kiblat, serta tasbih digital.',
+                'Zelixa Islamic adalah aplikasi Al-Qur\'an digital modern, cepat, dan mudah digunakan yang dirancang untuk menemani ibadah harian kaum muslimin. Dilengkapi dengan Al-Qur\'an lengkap 30 juz, transliterasi Latin, terjemahan resmi Kemenag RI, audio tilawah per ayat, doa harian, dzikir, jadwal shalat akurat, kompas arah kiblat, serta tasbih digital.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.6, color: Color(0xFF334155)),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.6,
+                  color: Color(0xFF334155),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -99,11 +106,23 @@ class TentangAplikasiScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildCreditRow(Icons.book, 'Teks Arab & Terjemahan', 'Kementerian Agama Republik Indonesia (Kemenag RI)'),
+                  _buildCreditRow(
+                    Icons.book,
+                    'Teks Arab & Terjemahan',
+                    'Kementerian Agama Republik Indonesia (Kemenag RI)',
+                  ),
                   const SizedBox(height: 10),
-                  _buildCreditRow(Icons.audiotrack, 'Murottal Audio', 'Syaikh Misyari Rasyid Al-Afasi'),
+                  _buildCreditRow(
+                    Icons.audiotrack,
+                    'Murottal Audio',
+                    'Syaikh Misyari Rasyid Al-Afasi',
+                  ),
                   const SizedBox(height: 10),
-                  _buildCreditRow(Icons.calendar_today, 'Jadwal Shalat', 'Algoritma Perhitungan Astronomi Kemenag'),
+                  _buildCreditRow(
+                    Icons.calendar_today,
+                    'Jadwal Shalat',
+                    'Algoritma Perhitungan Astronomi Kemenag',
+                  ),
                 ],
               ),
             ),
@@ -129,8 +148,17 @@ class TentangAplikasiScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
             ],
           ),
         ),

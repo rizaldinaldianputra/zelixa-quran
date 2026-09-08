@@ -41,7 +41,7 @@ class ZelixaLogo extends StatelessWidget {
         if (showText) ...[
           SizedBox(height: iconSize * 0.3),
           Text(
-            'Zelixa Quran',
+            'Zelixa Islamic',
             style: TextStyle(
               fontSize: titleSize,
               fontWeight: FontWeight.bold,
@@ -52,10 +52,7 @@ class ZelixaLogo extends StatelessWidget {
           SizedBox(height: titleSize * 0.2),
           Text(
             'Al-Qur\'an Digital & Sahabat Ibadah',
-            style: TextStyle(
-              color: subtitleColor,
-              fontSize: subtitleSize,
-            ),
+            style: TextStyle(color: subtitleColor, fontSize: subtitleSize),
             textAlign: TextAlign.center,
           ),
         ],

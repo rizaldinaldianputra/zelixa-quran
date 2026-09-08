@@ -10,6 +10,7 @@ class PreferencesService extends ChangeNotifier {
 
   bool _isNotificationEnabled = true;
   bool _useAdzanSound = true;
+  bool _isFirstTimeFeatureDiscovery = true;
   final Map<String, bool> _prayerNotifications = {
     'Imsak': false,
     'Subuh': true,
@@ -22,6 +23,7 @@ class PreferencesService extends ChangeNotifier {
 
   bool get isNotificationEnabled => _isNotificationEnabled;
   bool get useAdzanSound => _useAdzanSound;
+  bool get isFirstTimeFeatureDiscovery => _isFirstTimeFeatureDiscovery;
 
   bool isPrayerNotificationEnabled(String prayerName) {
     if (!_isNotificationEnabled) return false;
@@ -36,6 +38,7 @@ class PreferencesService extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     _isNotificationEnabled = _prefs.getBool('isNotificationEnabled') ?? true;
     _useAdzanSound = _prefs.getBool('useAdzanSound') ?? true;
+    _isFirstTimeFeatureDiscovery = _prefs.getBool('isFirstTimeFeatureDiscovery') ?? true;
 
     for (var key in _prayerNotifications.keys) {
       final defaultValue = (key == 'Imsak' || key == 'Dhuha') ? false : true;
@@ -53,6 +56,12 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setUseAdzanSound(bool value) async {
     _useAdzanSound = value;
     await _prefs.setBool('useAdzanSound', value);
+    notifyListeners();
+  }
+
+  Future<void> setFeatureDiscoveryShown() async {
+    _isFirstTimeFeatureDiscovery = false;
+    await _prefs.setBool('isFirstTimeFeatureDiscovery', false);
     notifyListeners();
   }
 

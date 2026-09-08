@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../widgets/logo.dart';
 import 'main_navigation_screen.dart';
 
@@ -17,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPageData> _pages = [
     OnboardingPageData(
       title: 'Selamat Datang',
-      description: 'Zelixa Quran hadir untuk menemani ibadah harian Anda.',
+      description: 'Zelixa Islamic hadir untuk menemani ibadah harian Anda.',
       icon: Icons.mosque_rounded,
     ),
     OnboardingPageData(
@@ -93,7 +94,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Container(
                             padding: const EdgeInsets.all(32),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2B75A).withValues(alpha: 0.15),
+                              color: const Color(0xFFE2B75A)
+                                  .withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -122,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   );

@@ -5,6 +5,7 @@ import 'kiblat_screen.dart';
 import 'kalender_hijriah_screen.dart';
 import 'tasbih_screen.dart';
 import '../shalat/panduan_shalat_screen.dart';
+import '../zakat/kalkulator_zakat_screen.dart';
 
 class IbadahTabScreen extends StatelessWidget {
   const IbadahTabScreen({super.key});
@@ -12,6 +13,12 @@ class IbadahTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final modules = [
+      {
+        'title': 'Kalkulator Zakat',
+        'subtitle': 'Hitung Zakat Fitrah, Penghasilan & Maal otomatis',
+        'icon': Icons.calculate_rounded,
+        'screen': const KalkulatorZakatScreen(),
+      },
       {
         'title': 'Panduan Shalat Lengkap',
         'subtitle': 'Tata cara, bacaan, gerakan & semua jenis shalat',

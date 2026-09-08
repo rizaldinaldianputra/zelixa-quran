@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'hadits_screen.dart';
 import 'pengaturan_screen.dart';
 import 'tentang_aplikasi_screen.dart';
+import '../zakat/kalkulator_zakat_screen.dart';
 
 class LainnyaTabScreen extends StatelessWidget {
   const LainnyaTabScreen({super.key});
@@ -10,6 +11,12 @@ class LainnyaTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menuItems = [
+      {
+        'title': 'Kalkulator Zakat',
+        'subtitle': 'Hitung Zakat Fitrah, Penghasilan & Maal',
+        'icon': Icons.calculate_rounded,
+        'screen': const KalkulatorZakatScreen(),
+      },
       {
         'title': 'Hadits Pilihan',
         'subtitle': 'Kumpulan Hadits Arbain Nawawi & makna',
