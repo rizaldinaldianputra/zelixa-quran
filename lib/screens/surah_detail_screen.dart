@@ -34,10 +34,13 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
   double _fontSize = 24.0;
   bool _showLatin = true;
   bool _showTranslation = true;
+  late final ScrollController _scrollController;
+  bool _hasScrolledToInitial = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _loadSettings();
     _loadBookmarks();
     _saveLastReadInitial();
@@ -92,6 +95,7 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -275,7 +279,22 @@ class _SurahDetailScreenState extends ConsumerState<SurahDetailScreen> {
             return Center(child: Text('Tidak ada data ayat.', style: TextStyle(color: context.textSecondary)));
           }
 
+          if (!_hasScrolledToInitial && widget.initialVerseIndex > 0 && widget.initialVerseIndex < verses.length) {
+            _hasScrolledToInitial = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                final targetOffset = widget.initialVerseIndex * 220.0;
+                _scrollController.animateTo(
+                  targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                );
+              }
+            });
+          }
+
           return ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: verses.length + 1, // +1 for Bismillah banner
             itemBuilder: (context, index) {

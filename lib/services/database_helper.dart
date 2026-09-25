@@ -160,21 +160,193 @@ class DatabaseHelper {
     return Verse.fromMap(result.first).copyWith(words: words);
   }
 
-  Future<List<Map<String, dynamic>>> searchQuran(String query) async {
-    if (query.trim().isEmpty) return [];
-    final db = await instance.database;
-    final clean = '%${query.trim()}%';
+  Future<QuranSearchResult> searchQuran(String query) async {
+    final raw = query.trim();
+    if (raw.isEmpty) return const QuranSearchResult();
 
+    final db = await instance.database;
+    final allChapters = await getChapters();
+
+    // 1. Search matching chapters
+    final matchingChapters = <Chapter>[];
+    final normQuery = _normalizeSearch(raw);
+    final digitsOnly = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    final queryNumber = digitsOnly.isNotEmpty ? int.tryParse(digitsOnly) : null;
+
+    for (var ch in allChapters) {
+      bool match = false;
+      // Match surah number directly if query contains a number and user isn't searching specific verse
+      if (queryNumber != null && ch.surahNumber == queryNumber && !raw.contains(':') && !raw.toLowerCase().contains('ayat')) {
+        match = true;
+      }
+      // Match latin name normalized
+      final normLatin = _normalizeSearch(ch.surahNameLatin);
+      if (normLatin.contains(normQuery) || (normQuery.length >= 3 && normLatin.startsWith(normQuery))) {
+        match = true;
+      }
+      // Match translation / Indonesian meaning
+      final normTrans = _normalizeSearch(ch.translation);
+      if (normTrans.contains(normQuery)) {
+        match = true;
+      }
+      // Match Arabic name
+      if (ch.surahName.contains(raw)) {
+        match = true;
+      }
+
+      if (match && !matchingChapters.any((c) => c.surahNumber == ch.surahNumber)) {
+        matchingChapters.add(ch);
+      }
+    }
+
+    // 2. Check for verse reference (e.g. "2:255", "2 255", "surah 2 ayat 255", "albaqarah 255", "ayat kursi")
+    final specificVerses = <Map<String, dynamic>>[];
+
+    // Check "ayat kursi"
+    if (normQuery.contains('kursi')) {
+      final res = await _getVerseRow(db, 2, 255);
+      if (res != null) specificVerses.add(res);
+    }
+
+    // Check pattern "surah:verse" or "surah verse" or "surah ayat verse"
+    final refMatch = RegExp(
+      r'^(?:surah|surat|qs|q\.s\.?)?\s*(\d+)\s*(?::|ayat\s*|\s+)\s*(\d+)$',
+      caseSensitive: false,
+    ).firstMatch(raw);
+
+    if (refMatch != null) {
+      final sNum = int.tryParse(refMatch.group(1)!);
+      final vNum = int.tryParse(refMatch.group(2)!);
+      if (sNum != null && vNum != null) {
+        final res = await _getVerseRow(db, sNum, vNum);
+        if (res != null && !specificVerses.any((r) => r['surah_number'] == sNum && r['verse_number'] == vNum)) {
+          specificVerses.add(res);
+        }
+      }
+    } else {
+      // Check pattern like "al baqarah 255" or "baqarah: 255" or "yasin 1"
+      final nameVerseMatch = RegExp(
+        r'^(?:surah|surat)?\s*([a-zA-Z\s\-]+?)\s*(?::|ayat\s*|\s+)\s*(\d+)$',
+        caseSensitive: false,
+      ).firstMatch(raw);
+
+      if (nameVerseMatch != null) {
+        final sName = _normalizeSearch(nameVerseMatch.group(1)!);
+        final vNum = int.tryParse(nameVerseMatch.group(2)!);
+        if (vNum != null) {
+          final matchedCh = allChapters.where((ch) {
+            final n = _normalizeSearch(ch.surahNameLatin);
+            return n == sName || n.contains(sName) || sName.contains(n);
+          }).firstOrNull;
+          if (matchedCh != null) {
+            final res = await _getVerseRow(db, matchedCh.surahNumber, vNum);
+            if (res != null && !specificVerses.any((r) => r['surah_number'] == matchedCh.surahNumber && r['verse_number'] == vNum)) {
+              specificVerses.add(res);
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Search matching verses
+    final matchingVerses = <Map<String, dynamic>>[...specificVerses];
+
+    // Check if query is Arabic
+    final bool isArabic = RegExp(r'[\u0600-\u06FF]').hasMatch(raw);
+
+    if (isArabic) {
+      final cleanArabic = raw.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), ''); // remove harakat
+      final sql = '''
+        SELECT DISTINCT v.surah_number, v.verse_number, v.translation_id, v.latin,
+               c.surah_name, c.surah_name_latin,
+               (SELECT group_concat(text, ' ') FROM words w2 WHERE w2.surah_number = v.surah_number AND w2.verse_number = v.verse_number ORDER BY w2.word_index ASC) as arabic_text
+        FROM words w
+        JOIN verses v ON w.surah_number = v.surah_number AND w.verse_number = v.verse_number
+        JOIN chapters c ON v.surah_number = c.surah_number
+        WHERE w.text LIKE ? OR w.simple_text LIKE ?
+        ORDER BY v.surah_number ASC, v.verse_number ASC
+        LIMIT 60
+      ''';
+      final rows = await db.rawQuery(sql, ['%$raw%', '%$cleanArabic%']);
+      for (var r in rows) {
+        if (!matchingVerses.any((m) => m['surah_number'] == r['surah_number'] && m['verse_number'] == r['verse_number'])) {
+          matchingVerses.add(r);
+        }
+      }
+    } else {
+      // Split into terms (ignoring small filler words if multiple words present)
+      final terms = raw
+          .toLowerCase()
+          .replaceAll(RegExp(r"['’\-]"), '') // remove apostrophes and dashes
+          .replaceAll(RegExp(r'[^\w\s]'), ' ')
+          .split(RegExp(r'\s+'))
+          .where((t) => t.isNotEmpty && t != 'surah' && t != 'surat' && t != 'ayat')
+          .toList();
+
+      if (terms.isNotEmpty) {
+        final whereClauses = <String>[];
+        final whereArgs = <dynamic>[];
+
+        for (final t in terms) {
+          whereClauses.add('(v.translation_id LIKE ? OR v.latin LIKE ?)');
+          whereArgs.add('%$t%');
+          whereArgs.add('%$t%');
+        }
+
+        final sql = '''
+          SELECT v.surah_number, v.verse_number, v.translation_id, v.latin,
+                 c.surah_name, c.surah_name_latin,
+                 (SELECT group_concat(text, ' ') FROM words WHERE surah_number = v.surah_number AND verse_number = v.verse_number ORDER BY word_index ASC) as arabic_text
+          FROM verses v
+          JOIN chapters c ON v.surah_number = c.surah_number
+          WHERE ${whereClauses.join(' AND ')}
+          ORDER BY v.surah_number ASC, v.verse_number ASC
+          LIMIT 100
+        ''';
+
+        final rows = await db.rawQuery(sql, whereArgs);
+        for (var r in rows) {
+          if (!matchingVerses.any((m) => m['surah_number'] == r['surah_number'] && m['verse_number'] == r['verse_number'])) {
+            matchingVerses.add(r);
+          }
+        }
+      }
+    }
+
+    return QuranSearchResult(
+      chapters: matchingChapters,
+      verses: matchingVerses,
+    );
+  }
+
+  String _normalizeSearch(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll(RegExp(r'^(?:surah|surat|qs|q\.s\.?)\s*'), '')
+        .replaceAll(RegExp(r"['`\-\s\.]"), '')
+        .replaceAll('al', '')
+        .replaceAll('sh', 'sy')
+        .replaceAll('ts', 's')
+        .replaceAll('dz', 'z')
+        .replaceAll('dh', 'd')
+        .replaceAll('th', 't')
+        .replaceAll('aa', 'a')
+        .replaceAll('ii', 'i')
+        .replaceAll('uu', 'u');
+  }
+
+  Future<Map<String, dynamic>?> _getVerseRow(Database db, int surahNumber, int verseNumber) async {
     final sql = '''
       SELECT v.surah_number, v.verse_number, v.translation_id, v.latin,
-             c.surah_name, c.surah_name_latin
+             c.surah_name, c.surah_name_latin,
+             (SELECT group_concat(text, ' ') FROM words WHERE surah_number = v.surah_number AND verse_number = v.verse_number ORDER BY word_index ASC) as arabic_text
       FROM verses v
       JOIN chapters c ON v.surah_number = c.surah_number
-      WHERE v.translation_id LIKE ? OR v.latin LIKE ? OR c.surah_name_latin LIKE ?
-      ORDER BY v.surah_number ASC, v.verse_number ASC
-      LIMIT 100
+      WHERE v.surah_number = ? AND v.verse_number = ?
+      LIMIT 1
     ''';
-
-    return await db.rawQuery(sql, [clean, clean, clean]);
+    final res = await db.rawQuery(sql, [surahNumber, verseNumber]);
+    if (res.isNotEmpty) return res.first;
+    return null;
   }
 }

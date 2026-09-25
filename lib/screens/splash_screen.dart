@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/database_helper.dart';
+import '../services/notification_service.dart';
+import '../services/prayer_service.dart';
 import 'main_navigation_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -32,6 +34,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       // Ensure database is copied from assets or loaded
       await DatabaseHelper.instance.database;
+
+      // Ensure notification permissions and prayer schedule are registered
+      try {
+        await NotificationService().requestPermissions();
+        await PrayerService.scheduleAllNotifications();
+      } catch (e) {
+        debugPrint('Notification init during splash error: $e');
+      }
 
       // Small delay for pleasant branding transition
       await Future.delayed(const Duration(milliseconds: 1000));

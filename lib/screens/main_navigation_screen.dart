@@ -10,6 +10,8 @@ import 'lainnya/lainnya_tab_screen.dart';
 import '../services/preferences_service.dart';
 import '../theme/app_theme.dart';
 
+import '../services/prayer_service.dart';
+
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -17,12 +19,14 @@ class MainNavigationScreen extends StatefulWidget {
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends State<MainNavigationScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final prefs = PreferencesService();
       if (prefs.isFirstTimeFeatureDiscovery) {
@@ -36,6 +40,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         prefs.setFeatureDiscoveryShown();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      PrayerService.scheduleAllNotifications();
+    }
   }
 
   @override

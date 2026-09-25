@@ -14,8 +14,14 @@ class DoaTabScreen extends StatefulWidget {
 class _DoaTabScreenState extends State<DoaTabScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _doaSearchController = TextEditingController();
+  final TextEditingController _dzikirSearchController = TextEditingController();
+  final TextEditingController _asmaulHusnaSearchController = TextEditingController();
+
   String _selectedCategory = 'Semua';
   String _searchDoa = '';
+  String _searchDzikir = '';
+  String _searchAsmaulHusna = '';
   String _selectedDzikirType = 'shalat';
   final Map<int, int> _dzikirCounters = {};
 
@@ -28,6 +34,9 @@ class _DoaTabScreenState extends State<DoaTabScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _doaSearchController.dispose();
+    _dzikirSearchController.dispose();
+    _asmaulHusnaSearchController.dispose();
     super.dispose();
   }
 
@@ -88,14 +97,31 @@ class _DoaTabScreenState extends State<DoaTabScreen>
       'Perjalanan',
     ];
 
+    final searchTerms = _searchDoa
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r"['’\-]"), '')
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .toList();
+
     final filtered = DoaData.doaHarian.where((d) {
       final matchesCat =
           _selectedCategory == 'Semua' || d.category == _selectedCategory;
-      final matchesSearch =
-          _searchDoa.isEmpty ||
-          d.title.toLowerCase().contains(_searchDoa.toLowerCase()) ||
-          d.translation.toLowerCase().contains(_searchDoa.toLowerCase());
-      return matchesCat && matchesSearch;
+      if (searchTerms.isEmpty) return matchesCat;
+
+      final combined =
+          '${d.title} ${d.translation} ${d.latin} ${d.arabic} ${d.category} ${d.source}'
+              .toLowerCase()
+              .replaceAll(RegExp(r"['’\-]"), '');
+      final matchesSearch = searchTerms.every((t) => combined.contains(t));
+
+      if (_selectedCategory == 'Semua') {
+        return matchesSearch;
+      } else {
+        return matchesCat && matchesSearch;
+      }
     }).toList();
 
     return Column(
@@ -117,10 +143,11 @@ class _DoaTabScreenState extends State<DoaTabScreen>
               ],
             ),
             child: TextField(
+              controller: _doaSearchController,
               style: TextStyle(color: context.textPrimary, fontSize: 13),
               onChanged: (val) => setState(() => _searchDoa = val),
               decoration: InputDecoration(
-                hintText: 'Cari doa harian...',
+                hintText: 'Cari doa harian (contoh: makan, tidur, ilmu)...',
                 hintStyle: TextStyle(
                   color: isDark ? Colors.white38 : Colors.grey[400],
                   fontSize: 13,
@@ -130,6 +157,15 @@ class _DoaTabScreenState extends State<DoaTabScreen>
                   color: context.primaryAdaptive,
                   size: 20,
                 ),
+                suffixIcon: _searchDoa.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 18, color: context.textSecondary),
+                        onPressed: () {
+                          _doaSearchController.clear();
+                          setState(() => _searchDoa = '');
+                        },
+                      )
+                    : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
@@ -181,9 +217,30 @@ class _DoaTabScreenState extends State<DoaTabScreen>
         Expanded(
           child: filtered.isEmpty
               ? Center(
-                  child: Text(
-                    'Tidak ada doa ditemukan.',
-                    style: TextStyle(color: context.textSecondary),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 60, color: context.textSecondary),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ditemukan doa untuk "$_searchDoa"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Coba gunakan kata kunci lain atau pilih kategori "Semua".',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: context.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : ListView.separated(
@@ -320,13 +377,75 @@ class _DoaTabScreenState extends State<DoaTabScreen>
       {'key': 'petang', 'label': 'Dzikir Petang'},
     ];
 
-    final list = DoaData.dzikirList
-        .where((d) => d.type == _selectedDzikirType)
+    final searchTerms = _searchDzikir
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r"['’\-]"), '')
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
         .toList();
+
+    final list = DoaData.dzikirList.where((d) {
+      if (searchTerms.isEmpty) {
+        return d.type == _selectedDzikirType;
+      }
+      final combined =
+          '${d.title} ${d.translation} ${d.latin} ${d.arabic} ${d.note}'
+              .toLowerCase()
+              .replaceAll(RegExp(r"['’\-]"), '');
+      return searchTerms.every((t) => combined.contains(t));
+    }).toList();
 
     return Column(
       children: [
-        const SizedBox(height: 12),
+        // Search Input for Dzikir
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDarkSecondary : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _dzikirSearchController,
+              style: TextStyle(color: context.textPrimary, fontSize: 13),
+              onChanged: (val) => setState(() => _searchDzikir = val),
+              decoration: InputDecoration(
+                hintText: 'Cari dzikir (contoh: istighfar, tasbih, ayat kursi)...',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: context.primaryAdaptive,
+                  size: 20,
+                ),
+                suffixIcon: _searchDzikir.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 18, color: context.textSecondary),
+                        onPressed: () {
+                          _dzikirSearchController.clear();
+                          setState(() => _searchDzikir = '');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+        ),
+
         // Type Selector
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -376,9 +495,37 @@ class _DoaTabScreenState extends State<DoaTabScreen>
         const SizedBox(height: 8),
 
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: list.length,
+          child: list.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 60, color: context.textSecondary),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ditemukan dzikir untuk "$_searchDzikir"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Coba cari dengan kata kunci lain seperti istighfar, tasbih, tahmid, atau potongan doa.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: context.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: list.length,
             separatorBuilder: (_, _) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final item = list[index];
@@ -545,17 +692,100 @@ class _DoaTabScreenState extends State<DoaTabScreen>
   Widget _buildAsmaulHusnaTab() {
     final isDark = context.isDark;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: DoaData.asmaulHusna.length,
-      itemBuilder: (context, index) {
-        final item = DoaData.asmaulHusna[index];
+    final query = _searchAsmaulHusna.trim().toLowerCase();
+    final list = DoaData.asmaulHusna.where((item) {
+      if (query.isEmpty) return true;
+      final numStr = item.number.toString();
+      if (query == numStr || query == '#$numStr') return true;
+      final combined = '${item.latin} ${item.arabic} ${item.translation}'.toLowerCase();
+      final norm = query.replaceAll(RegExp(r"['`\-\s\.]"), '').replaceAll('al', '');
+      final normItem = combined.replaceAll(RegExp(r"['`\-\s\.]"), '').replaceAll('al', '');
+      return combined.contains(query) || normItem.contains(norm);
+    }).toList();
+
+    return Column(
+      children: [
+        // Search Input for Asmaul Husna
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDarkSecondary : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _asmaulHusnaSearchController,
+              style: TextStyle(color: context.textPrimary, fontSize: 13),
+              onChanged: (val) => setState(() => _searchAsmaulHusna = val),
+              decoration: InputDecoration(
+                hintText: 'Cari Asmaul Husna (contoh: Ar-Rahman, Pengasih, #1)...',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: context.primaryAdaptive,
+                  size: 20,
+                ),
+                suffixIcon: _searchAsmaulHusna.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, size: 18, color: context.textSecondary),
+                        onPressed: () {
+                          _asmaulHusnaSearchController.clear();
+                          setState(() => _searchAsmaulHusna = '');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+        ),
+
+        Expanded(
+          child: list.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 60, color: context.textSecondary),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ditemukan Asmaul Husna untuk "$_searchAsmaulHusna"',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final item = list[index];
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -618,6 +848,9 @@ class _DoaTabScreenState extends State<DoaTabScreen>
           ),
         );
       },
-    );
+    ),
+  ),
+],
+);
   }
 }

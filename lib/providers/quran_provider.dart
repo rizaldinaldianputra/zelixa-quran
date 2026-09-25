@@ -29,7 +29,7 @@ final surahVersesProvider = FutureProvider.family<List<Verse>, int>((
 });
 
 final searchQuranProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((
+    FutureProvider.family<QuranSearchResult, String>((
       ref,
       query,
     ) async {

@@ -753,16 +753,23 @@ class _PanduanShalatScreenState extends State<PanduanShalatScreen>
       ...ShalatData.shalatKhususList,
     ];
 
+    final searchTerms = _searchQuery
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .toList();
+
     final filteredShalat = allShalat.where((s) {
-      return s.name.toLowerCase().contains(_searchQuery) ||
-          s.description.toLowerCase().contains(_searchQuery) ||
-          s.hukum.toLowerCase().contains(_searchQuery);
+      if (searchTerms.isEmpty) return true;
+      final combined = '${s.name} ${s.description} ${s.hukum} ${s.rakaat} rakaat'.toLowerCase();
+      return searchTerms.every((term) => combined.contains(term));
     }).toList();
 
     final filteredGerakan = ShalatData.gerakanShalatList.where((g) {
-      return g.name.toLowerCase().contains(_searchQuery) ||
-          g.description.toLowerCase().contains(_searchQuery) ||
-          g.latin.toLowerCase().contains(_searchQuery);
+      if (searchTerms.isEmpty) return true;
+      final combined = '${g.name} ${g.description} ${g.latin} ${g.arabic} ${g.translation}'.toLowerCase();
+      return searchTerms.every((term) => combined.contains(term));
     }).toList();
 
     if (filteredShalat.isEmpty && filteredGerakan.isEmpty) {

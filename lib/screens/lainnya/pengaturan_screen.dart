@@ -446,6 +446,62 @@ class _PengaturanScreenState extends State<PengaturanScreen> {
                         }
                       },
                     ),
+                    Divider(height: 1, color: borderCol),
+                    ListTile(
+                      leading: const Icon(Icons.battery_charging_full_rounded, color: AppColors.accentEmerald),
+                      title: Text(
+                        'Panduan Agar Adzan Selalu Bunyi',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrim),
+                      ),
+                      subtitle: Text(
+                        'Pengaturan baterai & autostart (Xiaomi, Oppo, Vivo, Samsung)',
+                        style: TextStyle(fontSize: 11, color: textSec),
+                      ),
+                      trailing: Icon(Icons.info_outline_rounded, size: 18, color: textSec),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: isDark ? AppColors.darkCardSurface : Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Row(
+                              children: [
+                                const Icon(Icons.notifications_active_rounded, color: AppColors.accentGold),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Tips Notifikasi Adzan',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrim),
+                                ),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Agar suara adzan tetap berkumandang saat aplikasi ditutup atau HP terkunci:',
+                                  style: TextStyle(fontSize: 13, color: textPrim, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  '1. Beri izin Mulai Otomatis (Autostart) pada menu pengaturan aplikasi di HP Anda.\n'
+                                  '2. Atur Penghemat Baterai (Battery Optimization) menjadi "Tidak Ada Pembatasan" (Unrestricted/No restrictions).\n'
+                                  '3. Pastikan volume Nada Dering / Alarm HP tidak dalam mode hening (Silent).\n'
+                                  '4. Izinkan Zelixa Islamic mengirimkan Notifikasi & Alarm Tepat Waktu.',
+                                  style: TextStyle(fontSize: 12, color: textSec, height: 1.5),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text('Mengerti', style: TextStyle(color: primAdaptive, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ],
               ),

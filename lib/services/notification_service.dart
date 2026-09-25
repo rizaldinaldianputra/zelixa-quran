@@ -10,12 +10,14 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  Future<void> init() async {
-    tz.initializeTimeZones();
-    // Default to Jakarta if local timezone isn't easily obtained without extra packages
-    tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+  static const String adhanChannelId = 'adhan_channel_v4';
+  static const String defaultChannelId = 'default_channel_v4';
 
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+  Future<void> init() async {
+    _configureLocalTimeZone();
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -27,6 +29,68 @@ class NotificationService {
         debugPrint('Notification clicked: ${response.payload}');
       },
     );
+
+    // Create and register notification channels upfront for Android
+    await _createNotificationChannels();
+  }
+
+  void _configureLocalTimeZone() {
+    tz.initializeTimeZones();
+    try {
+      final offsetHours = DateTime.now().timeZoneOffset.inHours;
+      if (offsetHours == 9) {
+        tz.setLocalLocation(tz.getLocation('Asia/Jayapura'));
+      } else if (offsetHours == 8) {
+        tz.setLocalLocation(tz.getLocation('Asia/Makassar'));
+      } else {
+        tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+      }
+    } catch (e) {
+      try {
+        tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _createNotificationChannels() async {
+    final androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      // Clean up legacy channels if present
+      try {
+        await androidImplementation.deleteNotificationChannel(channelId: 'adhan_channel_id');
+        await androidImplementation.deleteNotificationChannel(channelId: 'default_channel_id');
+        await androidImplementation.deleteNotificationChannel(channelId: 'adhan_channel_v3');
+        await androidImplementation.deleteNotificationChannel(channelId: 'default_channel_v3');
+      } catch (_) {}
+
+      // Adzan channel with high priority and alarm audio attributes
+      const AndroidNotificationChannel adhanChannel = AndroidNotificationChannel(
+        adhanChannelId,
+        'Waktu Shalat (Adzan)',
+        description: 'Notifikasi waktu shalat dengan lantunan suara Adzan',
+        importance: Importance.max,
+        sound: RawResourceAndroidNotificationSound('adzan'),
+        playSound: true,
+        enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+
+      // Default ringtone channel with alarm attributes
+      const AndroidNotificationChannel defaultChannel = AndroidNotificationChannel(
+        defaultChannelId,
+        'Waktu Shalat (Nada Bawaan)',
+        description: 'Notifikasi waktu shalat dengan nada dering bawaan',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+
+      await androidImplementation.createNotificationChannel(adhanChannel);
+      await androidImplementation.createNotificationChannel(defaultChannel);
+    }
   }
 
   Future<void> requestPermissions() async {
@@ -39,31 +103,52 @@ class NotificationService {
     }
   }
 
-  Future<void> schedulePrayerNotification(int id, String prayerName, DateTime prayerTime, {bool useAdzanSound = true, String? customBody}) async {
-    // Only schedule if the time is in the future
-    if (prayerTime.isBefore(DateTime.now())) return;
+  Future<void> schedulePrayerNotification(
+    int id,
+    String prayerName,
+    DateTime prayerTime, {
+    bool useAdzanSound = true,
+    String? customBody,
+  }) async {
+    final scheduledTime = tz.TZDateTime(
+      tz.local,
+      prayerTime.year,
+      prayerTime.month,
+      prayerTime.day,
+      prayerTime.hour,
+      prayerTime.minute,
+    );
 
-    final tz.TZDateTime scheduledTime = tz.TZDateTime.from(prayerTime, tz.local);
+    // Only schedule if time is strictly in the future
+    if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
 
     final AndroidNotificationDetails androidPlatformChannelSpecifics = useAdzanSound
         ? const AndroidNotificationDetails(
-            'adhan_channel_id',
+            adhanChannelId,
             'Waktu Shalat (Adzan)',
-            channelDescription: 'Notifikasi waktu shalat dengan suara Adzan',
+            channelDescription: 'Notifikasi waktu shalat dengan lantunan suara Adzan',
             importance: Importance.max,
             priority: Priority.high,
             sound: RawResourceAndroidNotificationSound('adzan'),
             playSound: true,
             enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+            fullScreenIntent: true,
           )
         : const AndroidNotificationDetails(
-            'default_channel_id',
-            'Waktu Shalat',
-            channelDescription: 'Notifikasi waktu shalat dengan suara bawaan',
+            defaultChannelId,
+            'Waktu Shalat (Nada Bawaan)',
+            channelDescription: 'Notifikasi waktu shalat dengan nada dering bawaan',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
             enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+            fullScreenIntent: true,
           );
 
     final NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -72,57 +157,76 @@ class NotificationService {
 
     final body = customBody ?? 'Telah masuk waktu shalat $prayerName. Mari tunaikan shalat.';
 
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id: id,
-      title: 'Waktu $prayerName',
-      body: body,
-      scheduledDate: scheduledTime,
-      notificationDetails: platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: prayerName,
-    );
-    
-    debugPrint('Scheduled $prayerName at $scheduledTime (ID: $id)');
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id: id,
+        title: 'Waktu $prayerName',
+        body: body,
+        scheduledDate: scheduledTime,
+        notificationDetails: platformChannelSpecifics,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: prayerName,
+      );
+      debugPrint('Scheduled $prayerName (ID: $id) exact at $scheduledTime');
+    } catch (e) {
+      debugPrint('Exact alarm failed for $prayerName ($e), falling back to inexactAllowWhileIdle');
+      try {
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          id: id,
+          title: 'Waktu $prayerName',
+          body: body,
+          scheduledDate: scheduledTime,
+          notificationDetails: platformChannelSpecifics,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: prayerName,
+        );
+      } catch (e2) {
+        debugPrint('Failed to schedule notification $prayerName: $e2');
+      }
+    }
   }
 
   Future<void> cancelNotification(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id: id);
     debugPrint('Canceled notification ID: $id');
   }
-  
+
   Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 
   Future<void> recreateChannels() async {
-    final androidImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidImplementation != null) {
-      await androidImplementation.deleteNotificationChannel(channelId: 'adhan_channel_id');
-      await androidImplementation.deleteNotificationChannel(channelId: 'default_channel_id');
-    }
+    await _createNotificationChannels();
   }
 
   Future<void> showTestNotification({bool useAdzanSound = true}) async {
     final AndroidNotificationDetails androidPlatformChannelSpecifics = useAdzanSound
         ? const AndroidNotificationDetails(
-            'adhan_channel_id',
+            adhanChannelId,
             'Waktu Shalat (Adzan)',
-            channelDescription: 'Notifikasi waktu shalat dengan suara Adzan',
+            channelDescription: 'Notifikasi waktu shalat dengan lantunan suara Adzan',
             importance: Importance.max,
             priority: Priority.high,
             sound: RawResourceAndroidNotificationSound('adzan'),
             playSound: true,
             enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+            fullScreenIntent: true,
           )
         : const AndroidNotificationDetails(
-            'default_channel_id',
-            'Waktu Shalat',
-            channelDescription: 'Notifikasi waktu shalat dengan suara bawaan',
+            defaultChannelId,
+            'Waktu Shalat (Nada Bawaan)',
+            channelDescription: 'Notifikasi waktu shalat dengan nada dering bawaan',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
             enableVibration: true,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+            fullScreenIntent: true,
           );
 
     final NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -133,8 +237,8 @@ class NotificationService {
       id: 999,
       title: 'Uji Coba Notifikasi Shalat',
       body: useAdzanSound
-          ? 'Ini adalah contoh notifikasi shalat dengan suara Adzan.'
-          : 'Ini adalah contoh notifikasi shalat dengan nada dering bawaan.',
+          ? 'Memutar lantunan suara Adzan Zelixa.'
+          : 'Memutar nada notifikasi bawaan.',
       notificationDetails: platformChannelSpecifics,
       payload: 'test_notification',
     );

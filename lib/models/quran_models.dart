@@ -103,3 +103,15 @@ class Word {
     );
   }
 }
+
+class QuranSearchResult {
+  final List<Chapter> chapters;
+  final List<Map<String, dynamic>> verses;
+
+  const QuranSearchResult({
+    this.chapters = const [],
+    this.verses = const [],
+  });
+
+  bool get isEmpty => chapters.isEmpty && verses.isEmpty;
+}

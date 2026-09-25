@@ -145,113 +145,293 @@ class _QuranTabScreenState extends ConsumerState<QuranTabScreen>
     final searchAsync = ref.watch(searchQuranProvider(_searchQuery));
 
     return searchAsync.when(
-      data: (results) {
-        if (results.isEmpty) {
+      data: (result) {
+        if (result.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.search_off, size: 64, color: context.textSecondary),
-                const SizedBox(height: 12),
-                Text(
-                  'Tidak ditemukan hasil untuk "$_searchQuery"',
-                  style: TextStyle(color: context.textSecondary),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off_rounded, size: 64, color: context.textSecondary),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Tidak ditemukan hasil untuk "$_searchQuery"',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Coba cari dengan nama surah (contoh: Yasin, Kahfi, Al-Baqarah), nomor surah (contoh: 18, 36), referensi ayat (contoh: 2:255), atau kata kunci terjemahan (contoh: puasa, rezeki).',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: context.textSecondary, height: 1.4),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
-        return ListView.separated(
+        return ListView(
           padding: const EdgeInsets.all(16),
-          itemCount: results.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final row = results[index];
-            final surahNumber = row['surah_number'] as int;
-            final verseNumber = row['verse_number'] as int;
-            final surahLatin = row['surah_name_latin'] as String? ?? '';
-            final translation = row['translation_id'] as String? ?? '';
-            final latin = row['verse_latin'] as String? ?? '';
-
-            return InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => SurahDetailScreen(
-                      surahNumber: surahNumber,
-                      surahName: surahLatin,
-                    ),
-                  ),
-                ).then((_) => _loadBookmarksAndHistory());
-              },
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: context.cardColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.borderColor),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Matching Surahs Section
+            if (result.chapters.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, left: 4),
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$surahLatin : $verseNumber',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (latin.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        latin,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: context.latinColor,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
+                    const Icon(Icons.menu_book_rounded, size: 18, color: Color(0xFFE2B75A)),
+                    const SizedBox(width: 8),
                     Text(
-                      translation,
-                      style: TextStyle(fontSize: 13, color: context.textSecondary),
+                      'SURAH (${result.chapters.length})',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: Color(0xFFE2B75A),
+                      ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
+              ...result.chapters.map((ch) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SurahDetailScreen(
+                            surahNumber: ch.surahNumber,
+                            surahName: ch.surahNameLatin,
+                          ),
+                        ),
+                      ).then((_) => _loadBookmarksAndHistory());
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: context.cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFE2B75A).withValues(alpha: 0.3),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${ch.surahNumber}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ch.surahNameLatin,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${ch.translation} • ${ch.numVerses} Ayat • ${ch.revelationPlace}',
+                                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            ch.surahName,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: context.arabicColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+            ],
+
+            // Matching Verses Section
+            if (result.verses.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, left: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.format_quote_rounded, size: 18, color: context.primaryAdaptive),
+                    const SizedBox(width: 8),
+                    Text(
+                      'AYAT (${result.verses.length})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: context.primaryAdaptive,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ...result.verses.map((row) {
+                final surahNumber = row['surah_number'] as int;
+                final verseNumber = row['verse_number'] as int;
+                final surahLatin = row['surah_name_latin'] as String? ?? '';
+                final translation = row['translation_id'] as String? ?? '';
+                final latin = row['latin'] as String? ?? '';
+                final arabicText = row['arabic_text'] as String? ?? '';
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SurahDetailScreen(
+                            surahNumber: surahNumber,
+                            surahName: surahLatin,
+                            initialVerseIndex: verseNumber - 1,
+                          ),
+                        ),
+                      ).then((_) => _loadBookmarksAndHistory());
+                    },
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: context.cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: context.borderColor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1B4D36) : const Color(0xFF0F3A26),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'QS. $surahLatin : $verseNumber',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: context.textSecondary,
+                              ),
+                            ],
+                          ),
+                          if (arabicText.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              arabicText,
+                              textAlign: TextAlign.right,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                height: 1.8,
+                                color: context.arabicColor,
+                              ),
+                            ),
+                          ],
+                          if (latin.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              latin,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontStyle: FontStyle.italic,
+                                color: context.latinColor,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Text(
+                            translation,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ],
         );
       },
       loading: () => Center(
         child: CircularProgressIndicator(color: context.primaryAdaptive),
       ),
-      error: (err, _) => Center(child: Text('Error: $err')),
+      error: (err, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Terjadi kesalahan pencarian: $err',
+            style: TextStyle(color: context.textSecondary),
+          ),
+        ),
+      ),
     );
   }
 
